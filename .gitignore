@@ -1,0 +1,176 @@
+# =========================================================
+# Unity
+# =========================================================
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# MemoryCaptures can get very large
+[Mm]emoryCaptures/
+
+# Recordings
+[Rr]ecordings/
+
+# Asset Store tools
+[Aa]ssets/AssetStoreTools*
+
+# Addressables
+[Aa]ssets/AddressableAssetsData/*/*.bin*
+[Aa]ssets/StreamingAssets/aa.meta
+[Aa]ssets/StreamingAssets/aa/
+
+# Unity generated crash reports
+sysinfo.txt
+
+# =========================================================
+# Unity generated solution/project files
+# =========================================================
+
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+.vscode/
+*.rsuser
+*.userosscache
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+# =========================================================
+# Build outputs
+# =========================================================
+
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.x86
+*.x86_64
+*.appx
+*.msix
+*.msixbundle
+
+# WebGL builds
+[Bb]uilds/WebGL/
+[Bb]uild/WebGL/
+
+# Windows build folders
+[Bb]uilds/Windows/
+[Bb]uild/Windows/
+
+# =========================================================
+# Logs / Evaluation outputs
+# =========================================================
+
+# Falls du Evaluation-Logs nicht ins Repo laden willst:
+EvaluationLogs/
+Logs/
+RuntimeLogs/
+TestLogs/
+*.log
+
+# Falls du CSV/JSON-Testlogs bewusst versionieren willst,
+# diese Zeilen später entfernen oder gezielter machen:
+*.runtime.csv
+*.runtime.json
+dialogue_log_*.csv
+dialogue_log_*.json
+evaluation_log_*.csv
+evaluation_log_*.json
+
+# =========================================================
+# API keys / secrets
+# =========================================================
+
+.env
+.env.*
+*.env
+secrets.json
+Secrets.json
+api_keys.json
+ApiKeys.json
+openai_key.txt
+OpenAIKey.txt
+config.local.json
+appsettings.Development.json
+
+# Falls du API Keys in Unity Resources/StreamingAssets testweise ablegst:
+[Aa]ssets/[Rr]esources/*[Kk]ey*
+[Aa]ssets/[Rr]esources/*[Ss]ecret*
+[Aa]ssets/[Ss]treaming[Aa]ssets/*[Kk]ey*
+[Aa]ssets/[Ss]treaming[Aa]ssets/*[Ss]ecret*
+
+# =========================================================
+# OS generated files
+# =========================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# =========================================================
+# Packages / Cache
+# =========================================================
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# npm, falls du später ein kleines Tool/Webscript ergänzst
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================================================
+# Do NOT ignore these important Unity files
+# =========================================================
+
+!Assets/
+!Packages/
+!ProjectSettings/
+!Packages/manifest.json
+!Packages/packages-lock.json
