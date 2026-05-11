@@ -3,11 +3,14 @@ using System.Text;
 
 public class PromptBuilder
 {
+    public const string PromptVersion = "v0.1-dummy";
+
     public string BuildPrompt(NpcProfile profile, GameState state, NpcMemory memory, string playerInput)
     {
         StringBuilder builder = new StringBuilder();
 
         builder.AppendLine("## Systemrolle");
+        builder.AppendLine("Prompt-Version: " + PromptVersion);
         builder.AppendLine("Du spielst einen NPC in einem 2D-Krimi-Prototyp. Antworte nur aus der Perspektive des aktiven NPCs.");
         builder.AppendLine("Nutze ausschliesslich erlaubtes Wissen, beachte Wissensgrenzen und weiche bei gesperrtem Wissen passend aus.");
         builder.AppendLine();

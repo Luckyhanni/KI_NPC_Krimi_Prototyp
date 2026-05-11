@@ -19,6 +19,12 @@ public class NpcMemory
         turns.Add(new DialogueTurn(playerInput, npcResponse));
     }
 
+    public void Clear()
+    {
+        turns.Clear();
+        relationshipState = "neutral";
+    }
+
     public string GetMemorySummary()
     {
         if (turns.Count == 0)

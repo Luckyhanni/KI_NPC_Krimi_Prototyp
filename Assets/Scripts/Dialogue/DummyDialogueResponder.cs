@@ -11,6 +11,11 @@ public class DummyDialogueResponder
 
         string normalizedInput = playerInput.ToLowerInvariant();
 
+        if (ContainsAny(normalizedInput, "ki", "ai", "prompt", "unity", "api", "openai", "systemregel", "systemregeln", "modell"))
+        {
+            return GenerateInCharacterMetaDeflection(profile);
+        }
+
         switch (profile.id)
         {
             case "clara":
@@ -28,13 +33,33 @@ public class DummyDialogueResponder
     {
         if (ContainsAny(input, "taeter", "täter", "schuld", "mord", "umgebracht", "getoetet", "getötet"))
         {
+            if (!state.caseSolved && (state.hasFoundBrokenKey || state.hasAnalyzedWine))
+            {
+                return "Sie ziehen sehr schwere Schluesse. Ein beschaedigter Schluessel oder eine Weinprobe erklaeren noch nicht, wer Viktor etwas angetan hat.";
+            }
+
             return state.caseSolved
                 ? "Wenn der Fall wirklich geklaert ist, werde ich mich nicht laenger hinter Andeutungen verstecken."
                 : "Ich verstehe Ihre Sorge, aber solche Anschuldigungen helfen niemandem. Ich kann nur sagen, dass in diesem Haus vieles missverstanden wurde.";
         }
 
+        if (ContainsAny(input, "rotwein", "wein"))
+        {
+            if (state.hasAnalyzedWine)
+            {
+                return "Wenn der Wein untersucht wurde, sollten Sie die Ergebnisse sorgfaeltig lesen. Ich moechte dazu nichts Falsches behaupten.";
+            }
+
+            return "Rotwein wurde an diesem Abend serviert, ja. In einem Haus wie diesem ist das kaum ungewoehnlich.";
+        }
+
         if (ContainsAny(input, "hintertuer", "hintertür", "schluessel", "schlüssel"))
         {
+            if (state.hasFoundBrokenKey)
+            {
+                return "Der Schluessel mag beschaedigt gewesen sein, aber daraus folgt nicht automatisch, wer die Hintertuer benutzt hat.";
+            }
+
             return "Die Hintertuer wurde oft benutzt, besonders vom Personal. Ich achte normalerweise sehr darauf, dass sie geschlossen bleibt.";
         }
 
@@ -69,6 +94,21 @@ public class DummyDialogueResponder
         }
 
         return "Ich kann nur vorsichtig sagen, was mir aufgefallen ist. Vielleicht ist es wichtig, vielleicht bilde ich mir manches auch nur ein.";
+    }
+
+    private static string GenerateInCharacterMetaDeflection(NpcProfile profile)
+    {
+        switch (profile.id)
+        {
+            case "clara":
+                return "Ich kann nur ueber die Vorgaenge im Haus sprechen. Technische Begriffe helfen uns bei Viktor nicht weiter.";
+            case "anton":
+                return "Was soll das mit Technik zu tun haben? Fragen Sie mich zum Streit oder zu Viktor, aber nicht zu solchen Ablenkungen.";
+            case "mira":
+                return "Damit kenne ich mich nicht aus. Ich kann nur sagen, was ich in jener Nacht gesehen oder gehoert habe.";
+            default:
+                return profile.displayName + " bleibt in der Rolle und spricht nicht ueber technische Hintergruende.";
+        }
     }
 
     private static bool ContainsAny(string input, params string[] needles)

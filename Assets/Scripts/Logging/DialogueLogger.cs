@@ -1,30 +1,54 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
 
+[Serializable]
+public class DialogueLogEntry
+{
+    public string timestamp;
+    public string mode;
+    public string promptVersion;
+    public string testCaseId;
+    public string npcId;
+    public string npcDisplayName;
+    public string playerInput;
+    public string activeStateSummary;
+    public List<string> usedAllowedKnowledge;
+    public List<string> usedConstraints;
+    public string generatedPrompt;
+    public string npcResponse;
+}
+
 public class DialogueLogger
 {
     private readonly bool writeFile;
-    private readonly string logFilePath;
+    private readonly string legacyTextLogFilePath;
+    private readonly string jsonlLogFilePath;
 
     public DialogueLogger(bool writeFile = true)
     {
         this.writeFile = writeFile;
-        logFilePath = Path.Combine(Application.persistentDataPath, "dialogue_dummy_log.txt");
+        legacyTextLogFilePath = Path.Combine(Application.persistentDataPath, "dialogue_dummy_log.txt");
+        jsonlLogFilePath = Path.Combine(Application.persistentDataPath, "dialogue_logs.jsonl");
     }
 
-    public void LogTurn(NpcProfile profile, GameState state, string playerInput, string prompt, string dummyResponse)
+    public void LogTurn(NpcProfile profile, GameState state, string playerInput, string prompt, string dummyResponse, string promptVersion, string testCaseId)
     {
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        string timestamp = DateTime.Now.ToString("o");
+        string stateSummary = state.GetActiveStateSummary();
         StringBuilder builder = new StringBuilder();
 
         builder.AppendLine("========== Dialogue Dummy Log ==========");
         builder.AppendLine("Timestamp: " + timestamp);
+        builder.AppendLine("Mode: dummy");
+        builder.AppendLine("Prompt-Version: " + promptVersion);
+        builder.AppendLine("Testfall-ID: " + testCaseId);
         builder.AppendLine("NPC-ID: " + profile.id);
         builder.AppendLine("NPC-Name: " + profile.displayName);
         builder.AppendLine("Spielerfrage: " + playerInput);
-        builder.AppendLine("Aktive State-Flags: " + state.GetActiveStateSummary());
+        builder.AppendLine("Aktive State-Flags: " + stateSummary);
         builder.AppendLine("Erlaubtes Wissen: " + string.Join(", ", profile.allowedKnowledge));
         builder.AppendLine("Constraints: " + string.Join(", ", profile.constraints));
         builder.AppendLine("Prompt:");
@@ -42,7 +66,23 @@ public class DialogueLogger
 
         try
         {
-            File.AppendAllText(logFilePath, builder + Environment.NewLine);
+            File.AppendAllText(legacyTextLogFilePath, builder + Environment.NewLine);
+            DialogueLogEntry entry = new DialogueLogEntry
+            {
+                timestamp = timestamp,
+                mode = "dummy",
+                promptVersion = promptVersion,
+                testCaseId = string.IsNullOrWhiteSpace(testCaseId) ? "manual" : testCaseId,
+                npcId = profile.id,
+                npcDisplayName = profile.displayName,
+                playerInput = playerInput,
+                activeStateSummary = stateSummary,
+                usedAllowedKnowledge = new List<string>(profile.allowedKnowledge),
+                usedConstraints = new List<string>(profile.constraints),
+                generatedPrompt = prompt,
+                npcResponse = dummyResponse
+            };
+            File.AppendAllText(jsonlLogFilePath, JsonUtility.ToJson(entry) + Environment.NewLine);
         }
         catch (Exception exception)
         {

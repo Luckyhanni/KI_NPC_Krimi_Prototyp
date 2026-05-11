@@ -8,7 +8,7 @@ Diese Datei dient als Arbeitskontext fuer weitere Entwicklungsdurchgaenge. Sie s
 - Kontext: Bachelorarbeits-Prototyp fuer KI-gestuetzte NPC-Dialoge in einem kleinen Krimi-Szenario.
 - Fokus: Dialoglogik, NPC-Profile, Wissensgrenzen, GameState, Memory, Constraints, Promptaufbau und Logging.
 - Nicht-Fokus: Grafikqualitaet, komplexes Movement, fertiges Spielsystem oder produktive KI-Anbindung.
-- Aktueller Prototyp-Ansatz: Zunaechst Dummy-Modus ohne echte KI/API, damit UI, State, Promptstruktur und Logging testbar sind.
+- Aktueller Prototyp-Ansatz: Dummy-Modus ohne echte KI/API, damit UI, State, Promptstruktur, Memory und evaluierbares Logging testbar sind.
 
 ## Worum es geht
 
@@ -25,7 +25,7 @@ Die drei ersten NPCs sind:
 - Unity: 6000.3.15f1
 - Projektart: 2D/UI-basierter Unity-Prototyp
 - Render Pipeline: Universal Render Pipeline / 2D Renderer
-- UI aktuell: UnityEngine.UI
+- UI aktuell: UnityEngine.UI mit automatisch erzeugtem dreigeteiltem Dashboard.
 - TextMeshPro: Nicht im Manifest vorhanden; nur verwenden, wenn es spaeter bewusst hinzugefuegt oder im Projekt verfuegbar ist.
 - Input: Unity Input System ist installiert; fuer UI wird beim Auto-Aufbau `InputSystemUIInputModule` verwendet.
 - MCP: Unity MCP ist verbunden und kann fuer Szene, Assets, Scripts, Console und Play-Mode-Pruefungen genutzt werden.
@@ -107,13 +107,19 @@ git status --short
 - Dummy-Antworten unterscheiden sich je NPC.
 - PromptBuilder erzeugt ein Kontextpaket mit Systemrolle, NPC-Profil, erlaubtem Wissen, gesperrten Wissensbereichen als Ausweichhinweis, State, Memory, Constraints und Spielereingabe.
 - DialogueLogger schreibt Prompt, Antwort, aktiven NPC, State-Flags, erlaubtes Wissen und Constraints in die Unity Console.
-- Optionales File-Logging geht nach `Application.persistentDataPath/dialogue_dummy_log.txt`.
+- Persistentes Evaluationslogging schreibt JSONL nach `Application.persistentDataPath/dialogue_logs.jsonl`.
+- Jeder Logeintrag enthaelt u.a. `mode`, `promptVersion`, `testCaseId`, NPC-Daten, State, erlaubtes Wissen, Constraints, Prompt und Dummy-Antwort.
+- Aktuelle Prompt-Version: `v0.1-dummy`.
+- Die UI enthaelt ein Testfall-ID-Feld mit Standardwert `manual`.
+- State-Flags koennen im UI per Toggle geaendert werden.
+- Memory kann fuer den aktiven NPC oder fuer alle NPCs zurueckgesetzt werden.
+- Die Runtime-UI nutzt CanvasScaler mit 1920 x 1080 Reference Resolution und ein dunkles Krimi-Farbschema.
+- Layout: Titel oben, NPC-Karten links, Chat in der Mitte, Debug/State rechts, Eingabe unten.
 - Es gibt weiterhin keine echte KI/API-Anbindung.
 
 ## Naechste sinnvolle Schritte
 
 - NPC-Profile aus dem Code in ScriptableObjects oder JSON auslagern.
-- State-Flags ueber UI-Debug-Schalter testbar machen.
 - Prompt-Debug-Ansicht lesbarer machen.
 - Memory-Regeln ausbauen, zum Beispiel Gewichtung oder Zusammenfassung nach NPC.
 - DummyResponder spaeter durch eine klar gekapselte Provider-Schnittstelle ersetzen, ohne API-Keys im Repo zu speichern.

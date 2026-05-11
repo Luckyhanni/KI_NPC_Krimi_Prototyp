@@ -11,6 +11,8 @@ public class DialogueTurnResult
     public string playerInput;
     public string npcResponse;
     public string prompt;
+    public string promptVersion;
+    public string testCaseId;
     public string stateSummary;
     public string allowedKnowledgeSummary;
     public string constraintsSummary;
@@ -23,6 +25,8 @@ public class DialogueTurnResultEvent : UnityEvent<DialogueTurnResult>
 
 public class DialogueManager : MonoBehaviour
 {
+    public const string PromptVersion = PromptBuilder.PromptVersion;
+
     [SerializeField] private string currentNpcId = "clara";
     [SerializeField] private GameState gameState = new GameState();
 
@@ -31,9 +35,13 @@ public class DialogueManager : MonoBehaviour
 
     public UnityEvent<string> onNpcSelected = new UnityEvent<string>();
     public DialogueTurnResultEvent onDialogueTurnCompleted = new DialogueTurnResultEvent();
+    public UnityEvent<string> onStateChanged = new UnityEvent<string>();
+    public UnityEvent<string> onMemoryChanged = new UnityEvent<string>();
 
     public event Action<string> NpcSelected;
     public event Action<DialogueTurnResult> DialogueTurnCompleted;
+    public event Action<string> StateChanged;
+    public event Action<string> MemoryChanged;
 
     private PromptBuilder promptBuilder;
     private DummyDialogueResponder dummyResponder;
@@ -85,6 +93,11 @@ public class DialogueManager : MonoBehaviour
 
     public DialogueTurnResult SendPlayerInput(string input)
     {
+        return SendPlayerInput(input, "manual");
+    }
+
+    public DialogueTurnResult SendPlayerInput(string input, string testCaseId)
+    {
         NpcProfile profile = GetCurrentProfile();
         if (profile == null)
         {
@@ -94,6 +107,7 @@ public class DialogueManager : MonoBehaviour
 
         NpcMemory memory = memories[currentNpcId];
         string safeInput = input ?? string.Empty;
+        string safeTestCaseId = string.IsNullOrWhiteSpace(testCaseId) ? "manual" : testCaseId.Trim();
         string prompt = promptBuilder.BuildPrompt(profile, gameState, memory, safeInput);
         string response = dummyResponder.GenerateDummyResponse(profile, safeInput, gameState);
 
@@ -110,16 +124,75 @@ public class DialogueManager : MonoBehaviour
             playerInput = safeInput,
             npcResponse = response,
             prompt = prompt,
+            promptVersion = PromptVersion,
+            testCaseId = safeTestCaseId,
             stateSummary = gameState.GetActiveStateSummary(),
             allowedKnowledgeSummary = string.Join(", ", profile.allowedKnowledge),
             constraintsSummary = string.Join(", ", profile.constraints)
         };
 
-        dialogueLogger.LogTurn(profile, gameState, safeInput, prompt, response);
+        dialogueLogger.LogTurn(profile, gameState, safeInput, prompt, response, PromptVersion, safeTestCaseId);
         onDialogueTurnCompleted.Invoke(result);
         DialogueTurnCompleted?.Invoke(result);
 
         return result;
+    }
+
+    public void SetStateFlag(string flagName, bool value)
+    {
+        switch (flagName)
+        {
+            case "hasFoundBrokenKey":
+                gameState.hasFoundBrokenKey = value;
+                break;
+            case "hasFoundBurnedLetter":
+                gameState.hasFoundBurnedLetter = value;
+                break;
+            case "hasFoundDebtNote":
+                gameState.hasFoundDebtNote = value;
+                break;
+            case "hasAnalyzedWine":
+                gameState.hasAnalyzedWine = value;
+                break;
+            case "hasQuestionedClaraAlibi":
+                gameState.hasQuestionedClaraAlibi = value;
+                break;
+            case "hasAskedMiraAboutNight":
+                gameState.hasAskedMiraAboutNight = value;
+                break;
+            case "caseSolved":
+                gameState.caseSolved = value;
+                break;
+            default:
+                Debug.LogWarning("Unbekanntes State-Flag: " + flagName);
+                return;
+        }
+
+        NotifyStateChanged();
+    }
+
+    public void ResetCurrentNpcMemory()
+    {
+        if (memories.TryGetValue(currentNpcId, out NpcMemory memory))
+        {
+            memory.Clear();
+            NotifyMemoryChanged("Memory fuer " + currentNpcId + " zurueckgesetzt.");
+        }
+    }
+
+    public void ResetAllMemories()
+    {
+        foreach (NpcMemory memory in memories.Values)
+        {
+            memory.Clear();
+        }
+
+        NotifyMemoryChanged("Alle NPC-Memorys zurueckgesetzt.");
+    }
+
+    public string GetDebugStateSummary()
+    {
+        return gameState.GetActiveStateSummary();
     }
 
     private void CreateNpcProfiles()
@@ -270,6 +343,22 @@ public class DialogueManager : MonoBehaviour
         {
             gameState.confrontedNpcId = npcId;
         }
+
+        NotifyStateChanged();
+    }
+
+    private void NotifyStateChanged()
+    {
+        string summary = gameState.GetActiveStateSummary();
+        onStateChanged.Invoke(summary);
+        StateChanged?.Invoke(summary);
+    }
+
+    private void NotifyMemoryChanged(string message)
+    {
+        Debug.Log(message);
+        onMemoryChanged.Invoke(message);
+        MemoryChanged?.Invoke(message);
     }
 
     private static bool ContainsAny(string input, params string[] needles)
