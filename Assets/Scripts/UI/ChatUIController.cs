@@ -33,12 +33,14 @@ public class ChatUIController : MonoBehaviour
     [SerializeField] private Toggle hasQuestionedClaraAlibiToggle;
     [SerializeField] private Toggle hasAskedMiraAboutNightToggle;
     [SerializeField] private Toggle caseSolvedToggle;
+    [SerializeField] private Toggle autoStateToggle;
 
     private RectTransform debugPanel;
     private Image claraCardImage;
     private Image antonCardImage;
     private Image miraCardImage;
     private bool debugVisible = true;
+    private bool syncingStateToggles;
 
     private void Awake()
     {
@@ -55,6 +57,7 @@ public class ChatUIController : MonoBehaviour
         EnsureUiExists();
         RegisterListeners();
         RefreshNpcSelectionVisuals("Clara Weber");
+        SyncStateTogglesFromManager();
         RefreshDebugSummary("Bereit.");
     }
 
@@ -87,6 +90,15 @@ public class ChatUIController : MonoBehaviour
         RegisterStateToggle(hasQuestionedClaraAlibiToggle, "hasQuestionedClaraAlibi");
         RegisterStateToggle(hasAskedMiraAboutNightToggle, "hasAskedMiraAboutNight");
         RegisterStateToggle(caseSolvedToggle, "caseSolved");
+        autoStateToggle.onValueChanged.AddListener(value =>
+        {
+            if (syncingStateToggles)
+            {
+                return;
+            }
+
+            dialogueManager.SetAutoStateProgression(value);
+        });
 
         dialogueManager.DialogueTurnCompleted += HandleDialogueTurnCompleted;
         dialogueManager.NpcSelected += HandleNpcSelected;
@@ -130,6 +142,7 @@ public class ChatUIController : MonoBehaviour
 
     private void HandleStateChanged(string stateSummary)
     {
+        SyncStateTogglesFromManager();
         RefreshDebugSummary("State geändert.");
     }
 
@@ -156,6 +169,7 @@ public class ChatUIController : MonoBehaviour
             "NPC: " + npcName + "\n" +
             "Prompt-Version: " + DialogueManager.PromptVersion + "\n" +
             "Testfall-ID: " + GetCurrentTestCaseId() + "\n\n" +
+            "Auto-State: " + (dialogueManager.EnableAutoStateProgression ? "aktiv" : "aus") + "\n\n" +
             "Aktive State-Flags:\n" + dialogueManager.GetDebugStateSummary() + "\n\n" +
             "Erlaubtes Wissen:\n" + knowledge + "\n\n" +
             "Constraints:\n" + constraints;
@@ -173,7 +187,35 @@ public class ChatUIController : MonoBehaviour
 
     private void RegisterStateToggle(Toggle toggle, string flagName)
     {
-        toggle.onValueChanged.AddListener(value => dialogueManager.SetStateFlag(flagName, value));
+        toggle.onValueChanged.AddListener(value =>
+        {
+            if (syncingStateToggles)
+            {
+                return;
+            }
+
+            dialogueManager.SetStateFlag(flagName, value);
+        });
+    }
+
+    private void SyncStateTogglesFromManager()
+    {
+        if (dialogueManager == null || hasFoundBrokenKeyToggle == null)
+        {
+            return;
+        }
+
+        syncingStateToggles = true;
+        GameState state = dialogueManager.State;
+        hasFoundBrokenKeyToggle.isOn = state.hasFoundBrokenKey;
+        hasFoundBurnedLetterToggle.isOn = state.hasFoundBurnedLetter;
+        hasFoundDebtNoteToggle.isOn = state.hasFoundDebtNote;
+        hasAnalyzedWineToggle.isOn = state.hasAnalyzedWine;
+        hasQuestionedClaraAlibiToggle.isOn = state.hasQuestionedClaraAlibi;
+        hasAskedMiraAboutNightToggle.isOn = state.hasAskedMiraAboutNight;
+        caseSolvedToggle.isOn = state.caseSolved;
+        autoStateToggle.isOn = dialogueManager.EnableAutoStateProgression;
+        syncingStateToggles = false;
     }
 
     private void ToggleDebugPanel()
@@ -324,14 +366,17 @@ public class ChatUIController : MonoBehaviour
         caseSolvedToggle = CreateToggle("CaseSolvedToggle", debugPanel, "Fall gelöst", 18);
         Stretch(caseSolvedToggle.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -478f), new Vector2(-22f, -446f));
 
+        autoStateToggle = CreateToggle("AutoStateToggle", debugPanel, "Auto-State", 18);
+        Stretch(autoStateToggle.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -516f), new Vector2(-22f, -484f));
+
         resetCurrentMemoryButton = CreateButton("ResetCurrentMemoryButton", debugPanel, "Memory zurücksetzen", 19, WineColor);
-        Stretch(resetCurrentMemoryButton.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -540f), new Vector2(-22f, -494f));
+        Stretch(resetCurrentMemoryButton.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -578f), new Vector2(-22f, -532f));
 
         resetAllMemoriesButton = CreateButton("ResetAllMemoriesButton", debugPanel, "Alle Memorys zurücksetzen", 19, ButtonColor);
-        Stretch(resetAllMemoriesButton.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -594f), new Vector2(-22f, -548f));
+        Stretch(resetAllMemoriesButton.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -632f), new Vector2(-22f, -586f));
 
         ScrollRect debugScroll = CreateScrollArea("DebugScroll", debugPanel, out debugText, 16);
-        Stretch(debugScroll.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f, new Vector2(22f, 22f), new Vector2(-22f, -620f));
+        Stretch(debugScroll.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f, new Vector2(22f, 22f), new Vector2(-22f, -658f));
         debugText.supportRichText = true;
 
         RectTransform inputPanel = CreatePanel("InputPanel", root, PanelColorAlt);

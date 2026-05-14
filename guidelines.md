@@ -43,6 +43,7 @@ Assets/
       NpcMemory.cs
       DialogueTurn.cs
     Dialogue/
+      IDialogueResponder.cs
       PromptBuilder.cs
       DummyDialogueResponder.cs
       DialogueManager.cs
@@ -112,6 +113,8 @@ git status --short
 - Aktuelle Prompt-Version: `v0.1-dummy`.
 - Die UI enthaelt ein Testfall-ID-Feld mit Standardwert `manual`.
 - State-Flags koennen im UI per Toggle geaendert werden.
+- Auto-State-Progression ist fuer Evaluation standardmaessig deaktiviert und kann im Debug-Panel per `Auto-State` Toggle aktiviert werden.
+- Responder sind ueber `IDialogueResponder` abstrahiert; aktuell ist nur `DummyDialogueResponder` aktiv.
 - Memory kann fuer den aktiven NPC oder fuer alle NPCs zurueckgesetzt werden.
 - Die Runtime-UI nutzt CanvasScaler mit 1920 x 1080 Reference Resolution und ein dunkles Krimi-Farbschema.
 - Layout: Titel oben, NPC-Karten links, Chat in der Mitte, Debug/State rechts, Eingabe unten.
@@ -122,7 +125,7 @@ git status --short
 - NPC-Profile aus dem Code in ScriptableObjects oder JSON auslagern.
 - Prompt-Debug-Ansicht lesbarer machen.
 - Memory-Regeln ausbauen, zum Beispiel Gewichtung oder Zusammenfassung nach NPC.
-- DummyResponder spaeter durch eine klar gekapselte Provider-Schnittstelle ersetzen, ohne API-Keys im Repo zu speichern.
+- Spaeter kann ein echter Provider hinter `IDialogueResponder` ergaenzt werden, ohne API-Keys im Repo zu speichern.
 - Tests oder einfache Editor-Checks fuer PromptBuilder und DummyResponder ergaenzen.
 
 ## Dokumentationsstil

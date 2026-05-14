@@ -29,6 +29,7 @@ public class DialogueManager : MonoBehaviour
 
     [SerializeField] private string currentNpcId = "clara";
     [SerializeField] private GameState gameState = new GameState();
+    [SerializeField] private bool enableAutoStateProgression;
 
     public readonly Dictionary<string, NpcProfile> profiles = new Dictionary<string, NpcProfile>();
     public readonly Dictionary<string, NpcMemory> memories = new Dictionary<string, NpcMemory>();
@@ -44,16 +45,17 @@ public class DialogueManager : MonoBehaviour
     public event Action<string> MemoryChanged;
 
     private PromptBuilder promptBuilder;
-    private DummyDialogueResponder dummyResponder;
+    private IDialogueResponder dialogueResponder;
     private DialogueLogger dialogueLogger;
 
     public string CurrentNpcId => currentNpcId;
     public GameState State => gameState;
+    public bool EnableAutoStateProgression => enableAutoStateProgression;
 
     private void Awake()
     {
         promptBuilder = new PromptBuilder();
-        dummyResponder = new DummyDialogueResponder();
+        dialogueResponder = new DummyDialogueResponder();
         dialogueLogger = new DialogueLogger();
         CreateNpcProfiles();
         EnsureMemories();
@@ -109,12 +111,15 @@ public class DialogueManager : MonoBehaviour
         string safeInput = input ?? string.Empty;
         string safeTestCaseId = string.IsNullOrWhiteSpace(testCaseId) ? "manual" : testCaseId.Trim();
         string prompt = promptBuilder.BuildPrompt(profile, gameState, memory, safeInput);
-        string response = dummyResponder.GenerateDummyResponse(profile, safeInput, gameState);
+        string response = dialogueResponder.GenerateResponse(profile, safeInput, gameState, memory, prompt);
 
         if (!string.IsNullOrWhiteSpace(safeInput))
         {
             memory.AddTurn(safeInput, response);
-            ApplySimpleStateProgression(currentNpcId, safeInput);
+            if (enableAutoStateProgression)
+            {
+                ApplySimpleStateProgression(currentNpcId, safeInput);
+            }
         }
 
         DialogueTurnResult result = new DialogueTurnResult
@@ -168,6 +173,12 @@ public class DialogueManager : MonoBehaviour
                 return;
         }
 
+        NotifyStateChanged();
+    }
+
+    public void SetAutoStateProgression(bool value)
+    {
+        enableAutoStateProgression = value;
         NotifyStateChanged();
     }
 

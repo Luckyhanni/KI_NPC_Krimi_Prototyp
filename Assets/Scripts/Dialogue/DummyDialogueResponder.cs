@@ -1,7 +1,12 @@
 using System;
 
-public class DummyDialogueResponder
+public class DummyDialogueResponder : IDialogueResponder
 {
+    public string GenerateResponse(NpcProfile profile, string playerInput, GameState state, NpcMemory memory, string prompt)
+    {
+        return GenerateDummyResponse(profile, playerInput, state);
+    }
+
     public string GenerateDummyResponse(NpcProfile profile, string playerInput, GameState state)
     {
         if (string.IsNullOrWhiteSpace(playerInput))
