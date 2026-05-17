@@ -115,7 +115,7 @@ git status --short
 - Persistentes Evaluationslogging schreibt JSONL nach `Application.persistentDataPath/dialogue_logs.jsonl`.
 - JSONL und Textlog werden explizit mit UTF-8 geschrieben.
 - Jeder Logeintrag enthält u.a. `mode`, `responseMode`, `promptVersion`, `testCaseId`, NPC-Daten, State, erlaubtes Wissen, Constraints, Prompt und Antwort.
-- Aktuelle Prompt-Version: `v0.1-dummy`.
+- Aktuelle Prompt-Version: `v0.2-controlled-context`.
 - Die UI enthält ein Testfall-ID-Feld mit Standardwert `manual`.
 - State-Flags können im UI per Toggle geändert werden.
 - Auto-State-Progression ist für Evaluation standardmäßig deaktiviert und kann im Debug-Panel per `Auto-State` Toggle aktiviert werden.

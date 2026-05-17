@@ -3,7 +3,7 @@ using System.Text;
 
 public class PromptBuilder
 {
-    public const string PromptVersion = "v0.1-dummy";
+    public const string PromptVersion = "v0.2-controlled-context";
 
     public string BuildPrompt(NpcProfile profile, GameState state, NpcMemory memory, string playerInput)
     {
