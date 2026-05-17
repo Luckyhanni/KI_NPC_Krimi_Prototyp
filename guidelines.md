@@ -9,6 +9,7 @@ Diese Datei dient als Arbeitskontext fuer weitere Entwicklungsdurchgaenge. Sie s
 - Fokus: Dialoglogik, NPC-Profile, Wissensgrenzen, GameState, Memory, Constraints, Promptaufbau und Logging.
 - Nicht-Fokus: Grafikqualitaet, komplexes Movement, fertiges Spielsystem oder produktive KI-Anbindung.
 - Aktueller Prototyp-Ansatz: Dummy-Modus ohne echte KI/API, damit UI, State, Promptstruktur, Memory und evaluierbares Logging testbar sind.
+- Bachelorarbeits-Entscheidung: Kein ausfuehrlicher Vergleich lokales LLM vs. Cloud-LLM; Fokus auf cloud/API-basiertes LLM-Konzept und kontrolliertes NPC-Dialogsystem.
 
 ## Worum es geht
 
@@ -44,6 +45,9 @@ Assets/
       DialogueTurn.cs
     Dialogue/
       IDialogueResponder.cs
+      ResponseMode.cs
+      ApiConfig.cs
+      ApiDialogueResponder.cs
       PromptBuilder.cs
       DummyDialogueResponder.cs
       DialogueManager.cs
@@ -115,10 +119,15 @@ git status --short
 - State-Flags koennen im UI per Toggle geaendert werden.
 - Auto-State-Progression ist fuer Evaluation standardmaessig deaktiviert und kann im Debug-Panel per `Auto-State` Toggle aktiviert werden.
 - Responder sind ueber `IDialogueResponder` abstrahiert; aktuell ist nur `DummyDialogueResponder` aktiv.
+- `ResponseMode` unterscheidet `Dummy` und `Api`; Standard bleibt `Dummy`.
+- `ApiConfig` liest den API-Key ausschliesslich aus der lokalen Environment Variable `OPENAI_API_KEY`.
+- `ApiDialogueResponder` ist als sichere Struktur vorbereitet und gibt ohne Key eine klare Fehlermeldung zurueck; echte API-Requests sind noch nicht aktiv.
+- JSONL-Logs enthalten zusaetzlich `responseMode`.
 - Memory kann fuer den aktiven NPC oder fuer alle NPCs zurueckgesetzt werden.
 - Die Runtime-UI nutzt CanvasScaler mit 1920 x 1080 Reference Resolution und ein dunkles Krimi-Farbschema.
 - Layout: Titel oben, NPC-Karten links, Chat in der Mitte, Debug/State rechts, Eingabe unten.
 - Es gibt weiterhin keine echte KI/API-Anbindung.
+- Keine API-Keys oder Secrets in Code, Assets, Resources oder StreamingAssets speichern.
 
 ## Naechste sinnvolle Schritte
 

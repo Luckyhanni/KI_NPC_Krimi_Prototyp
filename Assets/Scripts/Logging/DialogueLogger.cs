@@ -9,6 +9,7 @@ public class DialogueLogEntry
 {
     public string timestamp;
     public string mode;
+    public string responseMode;
     public string promptVersion;
     public string testCaseId;
     public string npcId;
@@ -34,15 +35,18 @@ public class DialogueLogger
         jsonlLogFilePath = Path.Combine(Application.persistentDataPath, "dialogue_logs.jsonl");
     }
 
-    public void LogTurn(NpcProfile profile, GameState state, string playerInput, string prompt, string dummyResponse, string promptVersion, string testCaseId)
+    public void LogTurn(NpcProfile profile, GameState state, string playerInput, string prompt, string npcResponse, string promptVersion, string testCaseId, ResponseMode responseMode)
     {
         string timestamp = DateTime.Now.ToString("o");
         string stateSummary = state.GetActiveStateSummary();
+        string responseModeValue = responseMode.ToString();
+        string modeValue = responseModeValue.ToLowerInvariant();
         StringBuilder builder = new StringBuilder();
 
-        builder.AppendLine("========== Dialogue Dummy Log ==========");
+        builder.AppendLine("========== Dialogue Log ==========");
         builder.AppendLine("Timestamp: " + timestamp);
-        builder.AppendLine("Mode: dummy");
+        builder.AppendLine("Mode: " + modeValue);
+        builder.AppendLine("ResponseMode: " + responseModeValue);
         builder.AppendLine("Prompt-Version: " + promptVersion);
         builder.AppendLine("Testfall-ID: " + testCaseId);
         builder.AppendLine("NPC-ID: " + profile.id);
@@ -53,8 +57,8 @@ public class DialogueLogger
         builder.AppendLine("Constraints: " + string.Join(", ", profile.constraints));
         builder.AppendLine("Prompt:");
         builder.AppendLine(prompt);
-        builder.AppendLine("Dummy-Antwort:");
-        builder.AppendLine(dummyResponse);
+        builder.AppendLine("Antwort:");
+        builder.AppendLine(npcResponse);
         builder.AppendLine("========================================");
 
         Debug.Log(builder.ToString());
@@ -70,7 +74,8 @@ public class DialogueLogger
             DialogueLogEntry entry = new DialogueLogEntry
             {
                 timestamp = timestamp,
-                mode = "dummy",
+                mode = modeValue,
+                responseMode = responseModeValue,
                 promptVersion = promptVersion,
                 testCaseId = string.IsNullOrWhiteSpace(testCaseId) ? "manual" : testCaseId,
                 npcId = profile.id,
@@ -80,7 +85,7 @@ public class DialogueLogger
                 usedAllowedKnowledge = new List<string>(profile.allowedKnowledge),
                 usedConstraints = new List<string>(profile.constraints),
                 generatedPrompt = prompt,
-                npcResponse = dummyResponse
+                npcResponse = npcResponse
             };
             File.AppendAllText(jsonlLogFilePath, JsonUtility.ToJson(entry) + Environment.NewLine);
         }

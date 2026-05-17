@@ -13,6 +13,7 @@ public class DialogueTurnResult
     public string prompt;
     public string promptVersion;
     public string testCaseId;
+    public string responseMode;
     public string stateSummary;
     public string allowedKnowledgeSummary;
     public string constraintsSummary;
@@ -28,6 +29,7 @@ public class DialogueManager : MonoBehaviour
     public const string PromptVersion = PromptBuilder.PromptVersion;
 
     [SerializeField] private string currentNpcId = "clara";
+    [SerializeField] private ResponseMode responseMode = ResponseMode.Dummy;
     [SerializeField] private GameState gameState = new GameState();
     [SerializeField] private bool enableAutoStateProgression;
 
@@ -38,25 +40,32 @@ public class DialogueManager : MonoBehaviour
     public DialogueTurnResultEvent onDialogueTurnCompleted = new DialogueTurnResultEvent();
     public UnityEvent<string> onStateChanged = new UnityEvent<string>();
     public UnityEvent<string> onMemoryChanged = new UnityEvent<string>();
+    public UnityEvent<string> onResponseModeChanged = new UnityEvent<string>();
 
     public event Action<string> NpcSelected;
     public event Action<DialogueTurnResult> DialogueTurnCompleted;
     public event Action<string> StateChanged;
     public event Action<string> MemoryChanged;
+    public event Action<ResponseMode> ResponseModeChanged;
 
     private PromptBuilder promptBuilder;
     private IDialogueResponder dialogueResponder;
+    private DummyDialogueResponder dummyDialogueResponder;
+    private ApiDialogueResponder apiDialogueResponder;
     private DialogueLogger dialogueLogger;
 
     public string CurrentNpcId => currentNpcId;
+    public ResponseMode CurrentResponseMode => responseMode;
     public GameState State => gameState;
     public bool EnableAutoStateProgression => enableAutoStateProgression;
 
     private void Awake()
     {
         promptBuilder = new PromptBuilder();
-        dialogueResponder = new DummyDialogueResponder();
+        dummyDialogueResponder = new DummyDialogueResponder();
+        apiDialogueResponder = new ApiDialogueResponder(new ApiConfig());
         dialogueLogger = new DialogueLogger();
+        ApplyResponseMode();
         CreateNpcProfiles();
         EnsureMemories();
     }
@@ -131,12 +140,13 @@ public class DialogueManager : MonoBehaviour
             prompt = prompt,
             promptVersion = PromptVersion,
             testCaseId = safeTestCaseId,
+            responseMode = responseMode.ToString(),
             stateSummary = gameState.GetActiveStateSummary(),
             allowedKnowledgeSummary = string.Join(", ", profile.allowedKnowledge),
             constraintsSummary = string.Join(", ", profile.constraints)
         };
 
-        dialogueLogger.LogTurn(profile, gameState, safeInput, prompt, response, PromptVersion, safeTestCaseId);
+        dialogueLogger.LogTurn(profile, gameState, safeInput, prompt, response, PromptVersion, safeTestCaseId, responseMode);
         onDialogueTurnCompleted.Invoke(result);
         DialogueTurnCompleted?.Invoke(result);
 
@@ -180,6 +190,31 @@ public class DialogueManager : MonoBehaviour
     {
         enableAutoStateProgression = value;
         NotifyStateChanged();
+    }
+
+    public void SetResponseMode(ResponseMode mode)
+    {
+        if (responseMode == mode)
+        {
+            return;
+        }
+
+        responseMode = mode;
+        ApplyResponseMode();
+        onResponseModeChanged.Invoke(responseMode.ToString());
+        ResponseModeChanged?.Invoke(responseMode);
+        NotifyStateChanged();
+    }
+
+    public void SetResponseModeByIndex(int modeIndex)
+    {
+        if (modeIndex == (int)ResponseMode.Api)
+        {
+            SetResponseMode(ResponseMode.Api);
+            return;
+        }
+
+        SetResponseMode(ResponseMode.Dummy);
     }
 
     public void ResetCurrentNpcMemory()
@@ -314,6 +349,17 @@ public class DialogueManager : MonoBehaviour
                 memories.Add(npcId, new NpcMemory(npcId));
             }
         }
+    }
+
+    private void ApplyResponseMode()
+    {
+        if (responseMode == ResponseMode.Api)
+        {
+            dialogueResponder = apiDialogueResponder;
+            return;
+        }
+
+        dialogueResponder = dummyDialogueResponder;
     }
 
     private void ApplySimpleStateProgression(string npcId, string input)
