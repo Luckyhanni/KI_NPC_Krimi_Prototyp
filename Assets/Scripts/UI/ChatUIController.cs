@@ -21,9 +21,10 @@ public class ChatUIController : MonoBehaviour
     [SerializeField] private Button resetCurrentMemoryButton;
     [SerializeField] private Button resetAllMemoriesButton;
     [SerializeField] private Button toggleDebugButton;
+    [SerializeField] private Button dummyModeButton;
+    [SerializeField] private Button apiModeButton;
     [SerializeField] private InputField inputField;
     [SerializeField] private InputField testCaseInputField;
-    [SerializeField] private Dropdown responseModeDropdown;
     [SerializeField] private Text chatHistoryText;
     [SerializeField] private Text activeNpcText;
     [SerializeField] private Text debugText;
@@ -40,6 +41,8 @@ public class ChatUIController : MonoBehaviour
     private Image claraCardImage;
     private Image antonCardImage;
     private Image miraCardImage;
+    private Image dummyModeButtonImage;
+    private Image apiModeButtonImage;
     private bool debugVisible = true;
     private bool syncingStateToggles;
 
@@ -83,16 +86,9 @@ public class ChatUIController : MonoBehaviour
         resetCurrentMemoryButton.onClick.AddListener(dialogueManager.ResetCurrentNpcMemory);
         resetAllMemoriesButton.onClick.AddListener(dialogueManager.ResetAllMemories);
         toggleDebugButton.onClick.AddListener(ToggleDebugPanel);
+        dummyModeButton.onClick.AddListener(() => dialogueManager.SetResponseMode(ResponseMode.Dummy));
+        apiModeButton.onClick.AddListener(() => dialogueManager.SetResponseMode(ResponseMode.Api));
         inputField.onSubmit.AddListener(_ => SendCurrentInput());
-        responseModeDropdown.onValueChanged.AddListener(value =>
-        {
-            if (syncingStateToggles)
-            {
-                return;
-            }
-
-            dialogueManager.SetResponseModeByIndex(value);
-        });
 
         RegisterStateToggle(hasFoundBrokenKeyToggle, "hasFoundBrokenKey");
         RegisterStateToggle(hasFoundBurnedLetterToggle, "hasFoundBurnedLetter");
@@ -121,6 +117,11 @@ public class ChatUIController : MonoBehaviour
     private void SendCurrentInput()
     {
         string input = inputField.text;
+        if (!dialogueManager.IsResponseInProgress)
+        {
+            chatHistoryText.text += "\n\n<color=#9FB1C2><b>System:</b></color>\nAntwort wird generiert...";
+        }
+
         dialogueManager.SendPlayerInput(input, GetCurrentTestCaseId());
         inputField.text = string.Empty;
         inputField.ActivateInputField();
@@ -235,9 +236,20 @@ public class ChatUIController : MonoBehaviour
         hasAskedMiraAboutNightToggle.isOn = state.hasAskedMiraAboutNight;
         caseSolvedToggle.isOn = state.caseSolved;
         autoStateToggle.isOn = dialogueManager.EnableAutoStateProgression;
-        responseModeDropdown.value = (int)dialogueManager.CurrentResponseMode;
-        responseModeDropdown.RefreshShownValue();
         syncingStateToggles = false;
+        RefreshResponseModeButtons();
+    }
+
+    private void RefreshResponseModeButtons()
+    {
+        if (dummyModeButtonImage == null || apiModeButtonImage == null)
+        {
+            return;
+        }
+
+        bool isDummy = dialogueManager.CurrentResponseMode == ResponseMode.Dummy;
+        dummyModeButtonImage.color = isDummy ? ButtonSelectedColor : ButtonColor;
+        apiModeButtonImage.color = isDummy ? ButtonColor : ButtonSelectedColor;
     }
 
     private void ToggleDebugPanel()
@@ -266,7 +278,7 @@ public class ChatUIController : MonoBehaviour
 
     private void EnsureUiExists()
     {
-        if (chatHistoryText != null && inputField != null && sendButton != null && activeNpcText != null && testCaseInputField != null && responseModeDropdown != null && hasFoundBrokenKeyToggle != null)
+        if (chatHistoryText != null && inputField != null && sendButton != null && activeNpcText != null && testCaseInputField != null && dummyModeButton != null && apiModeButton != null && hasFoundBrokenKeyToggle != null)
         {
             return;
         }
@@ -367,8 +379,13 @@ public class ChatUIController : MonoBehaviour
         Text responseModeLabel = CreateText("ResponseModeLabel", debugPanel, "Response Mode", 18, FontStyle.Bold, TextAnchor.MiddleLeft);
         Stretch(responseModeLabel.rectTransform, 0f, 1f, 1f, 1f, new Vector2(22f, -204f), new Vector2(-22f, -170f));
 
-        responseModeDropdown = CreateDropdown("ResponseModeDropdown", debugPanel, 19);
-        Stretch(responseModeDropdown.GetComponent<RectTransform>(), 0f, 1f, 1f, 1f, new Vector2(22f, -256f), new Vector2(-22f, -210f));
+        dummyModeButton = CreateButton("ResponseModeDummyButton", debugPanel, "Dummy", 18, ButtonSelectedColor);
+        dummyModeButtonImage = dummyModeButton.GetComponent<Image>();
+        Stretch(dummyModeButton.GetComponent<RectTransform>(), 0f, 1f, 0.5f, 1f, new Vector2(22f, -256f), new Vector2(-6f, -210f));
+
+        apiModeButton = CreateButton("ResponseModeApiButton", debugPanel, "API", 18, ButtonColor);
+        apiModeButtonImage = apiModeButton.GetComponent<Image>();
+        Stretch(apiModeButton.GetComponent<RectTransform>(), 0.5f, 1f, 1f, 1f, new Vector2(6f, -256f), new Vector2(-22f, -210f));
 
         Text stateTitle = CreateText("StateTitle", debugPanel, "State-Flags", 20, FontStyle.Bold, TextAnchor.MiddleLeft);
         Stretch(stateTitle.rectTransform, 0f, 1f, 1f, 1f, new Vector2(22f, -306f), new Vector2(-22f, -270f));
@@ -499,88 +516,6 @@ public class ChatUIController : MonoBehaviour
         field.placeholder = placeholderText;
         field.lineType = InputField.LineType.SingleLine;
         return field;
-    }
-
-    private static Dropdown CreateDropdown(string name, Transform parent, int fontSize)
-    {
-        GameObject dropdownObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Dropdown));
-        dropdownObject.transform.SetParent(parent, false);
-        dropdownObject.GetComponent<Image>().color = new Color(0.895f, 0.900f, 0.890f, 1f);
-
-        Text label = CreateText("Label", dropdownObject.transform, "Dummy", fontSize, FontStyle.Bold, TextAnchor.MiddleLeft);
-        label.color = new Color(0.050f, 0.055f, 0.065f, 1f);
-        Stretch(label.rectTransform, 0f, 0f, 1f, 1f, new Vector2(16f, 0f), new Vector2(-40f, 0f));
-
-        Text arrow = CreateText("Arrow", dropdownObject.transform, "v", fontSize, FontStyle.Bold, TextAnchor.MiddleCenter);
-        arrow.color = new Color(0.050f, 0.055f, 0.065f, 1f);
-        Stretch(arrow.rectTransform, 1f, 0f, 1f, 1f, new Vector2(-34f, 0f), new Vector2(-8f, 0f));
-
-        GameObject templateObject = new GameObject("Template", typeof(RectTransform), typeof(Image), typeof(ScrollRect), typeof(Mask));
-        templateObject.transform.SetParent(dropdownObject.transform, false);
-        templateObject.SetActive(false);
-        templateObject.GetComponent<Image>().color = PanelColorAlt;
-        templateObject.GetComponent<Mask>().showMaskGraphic = true;
-        RectTransform templateRect = templateObject.GetComponent<RectTransform>();
-        templateRect.anchorMin = new Vector2(0f, 0f);
-        templateRect.anchorMax = new Vector2(1f, 0f);
-        templateRect.pivot = new Vector2(0.5f, 1f);
-        templateRect.sizeDelta = new Vector2(0f, 96f);
-        templateRect.anchoredPosition = new Vector2(0f, -2f);
-
-        GameObject viewportObject = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
-        viewportObject.transform.SetParent(templateObject.transform, false);
-        viewportObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-        viewportObject.GetComponent<Mask>().showMaskGraphic = false;
-        RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
-        Stretch(viewportRect, 0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
-
-        GameObject contentObject = new GameObject("Content", typeof(RectTransform));
-        contentObject.transform.SetParent(viewportObject.transform, false);
-        RectTransform contentRect = contentObject.GetComponent<RectTransform>();
-        Stretch(contentRect, 0f, 1f, 1f, 1f, new Vector2(0f, -96f), Vector2.zero);
-
-        GameObject itemObject = new GameObject("Item", typeof(RectTransform), typeof(Toggle));
-        itemObject.transform.SetParent(contentObject.transform, false);
-        RectTransform itemRect = itemObject.GetComponent<RectTransform>();
-        itemRect.anchorMin = new Vector2(0f, 0.5f);
-        itemRect.anchorMax = new Vector2(1f, 0.5f);
-        itemRect.sizeDelta = new Vector2(0f, 42f);
-        itemRect.anchoredPosition = Vector2.zero;
-
-        GameObject itemBackgroundObject = new GameObject("Item Background", typeof(RectTransform), typeof(Image));
-        itemBackgroundObject.transform.SetParent(itemObject.transform, false);
-        itemBackgroundObject.GetComponent<Image>().color = ButtonColor;
-        Stretch(itemBackgroundObject.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
-
-        GameObject itemCheckmarkObject = new GameObject("Item Checkmark", typeof(RectTransform), typeof(Image));
-        itemCheckmarkObject.transform.SetParent(itemObject.transform, false);
-        itemCheckmarkObject.GetComponent<Image>().color = GoldColor;
-        Stretch(itemCheckmarkObject.GetComponent<RectTransform>(), 0f, 0f, 0f, 1f, new Vector2(8f, 8f), new Vector2(24f, -8f));
-
-        Text itemLabel = CreateText("Item Label", itemObject.transform, "Dummy", fontSize, FontStyle.Normal, TextAnchor.MiddleLeft);
-        Stretch(itemLabel.rectTransform, 0f, 0f, 1f, 1f, new Vector2(40f, 0f), new Vector2(-8f, 0f));
-
-        Toggle itemToggle = itemObject.GetComponent<Toggle>();
-        itemToggle.targetGraphic = itemBackgroundObject.GetComponent<Image>();
-        itemToggle.graphic = itemCheckmarkObject.GetComponent<Image>();
-
-        ScrollRect scrollRect = templateObject.GetComponent<ScrollRect>();
-        scrollRect.content = contentRect;
-        scrollRect.viewport = viewportRect;
-        scrollRect.horizontal = false;
-        scrollRect.vertical = true;
-
-        Dropdown dropdown = dropdownObject.GetComponent<Dropdown>();
-        dropdown.targetGraphic = dropdownObject.GetComponent<Image>();
-        dropdown.template = templateRect;
-        dropdown.captionText = label;
-        dropdown.itemText = itemLabel;
-        dropdown.options.Clear();
-        dropdown.options.Add(new Dropdown.OptionData("Dummy"));
-        dropdown.options.Add(new Dropdown.OptionData("API"));
-        dropdown.value = 0;
-        dropdown.RefreshShownValue();
-        return dropdown;
     }
 
     private static Toggle CreateToggle(string name, Transform parent, string label, int fontSize)

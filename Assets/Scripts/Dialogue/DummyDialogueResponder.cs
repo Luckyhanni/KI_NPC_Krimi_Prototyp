@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 
 public class DummyDialogueResponder : IDialogueResponder
 {
-    public string GenerateResponse(NpcProfile profile, string playerInput, GameState state, NpcMemory memory, string prompt)
+    public IEnumerator GenerateResponse(NpcProfile profile, string playerInput, GameState state, NpcMemory memory, string prompt, Action<string> onResponse)
     {
-        return GenerateDummyResponse(profile, playerInput, state);
+        onResponse?.Invoke(GenerateDummyResponse(profile, playerInput, state));
+        yield break;
     }
 
     public string GenerateDummyResponse(NpcProfile profile, string playerInput, GameState state)

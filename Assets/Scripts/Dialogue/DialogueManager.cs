@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -53,30 +54,28 @@ public class DialogueManager : MonoBehaviour
     private DummyDialogueResponder dummyDialogueResponder;
     private ApiDialogueResponder apiDialogueResponder;
     private DialogueLogger dialogueLogger;
+    private bool responseInProgress;
 
     public string CurrentNpcId => currentNpcId;
     public ResponseMode CurrentResponseMode => responseMode;
     public GameState State => gameState;
     public bool EnableAutoStateProgression => enableAutoStateProgression;
+    public bool IsResponseInProgress => responseInProgress;
 
     private void Awake()
     {
-        promptBuilder = new PromptBuilder();
-        dummyDialogueResponder = new DummyDialogueResponder();
-        apiDialogueResponder = new ApiDialogueResponder(new ApiConfig());
-        dialogueLogger = new DialogueLogger();
-        ApplyResponseMode();
-        CreateNpcProfiles();
-        EnsureMemories();
+        EnsureInitialized();
     }
 
     private void Start()
     {
+        EnsureInitialized();
         SelectNpc(currentNpcId);
     }
 
     public NpcProfile GetCurrentProfile()
     {
+        EnsureInitialized();
         if (profiles.TryGetValue(currentNpcId, out NpcProfile profile))
         {
             return profile;
@@ -87,6 +86,7 @@ public class DialogueManager : MonoBehaviour
 
     public void SelectNpc(string npcId)
     {
+        EnsureInitialized();
         if (!profiles.ContainsKey(npcId))
         {
             Debug.LogWarning("Unbekannte NPC-ID: " + npcId);
@@ -109,18 +109,50 @@ public class DialogueManager : MonoBehaviour
 
     public DialogueTurnResult SendPlayerInput(string input, string testCaseId)
     {
+        EnsureInitialized();
+        if (responseInProgress)
+        {
+            Debug.LogWarning("Eine Antwort wird bereits generiert. Bitte warten.");
+            return null;
+        }
+
+        StartCoroutine(SendPlayerInputRoutine(input, testCaseId));
+        return null;
+    }
+
+    private IEnumerator SendPlayerInputRoutine(string input, string testCaseId)
+    {
+        EnsureInitialized();
         NpcProfile profile = GetCurrentProfile();
         if (profile == null)
         {
             Debug.LogError("Kein aktives NPC-Profil gefunden.");
-            return null;
+            yield break;
         }
 
         NpcMemory memory = memories[currentNpcId];
         string safeInput = input ?? string.Empty;
         string safeTestCaseId = string.IsNullOrWhiteSpace(testCaseId) ? "manual" : testCaseId.Trim();
         string prompt = promptBuilder.BuildPrompt(profile, gameState, memory, safeInput);
-        string response = dialogueResponder.GenerateResponse(profile, safeInput, gameState, memory, prompt);
+        string response = null;
+        responseInProgress = true;
+
+        IEnumerator responseRoutine = dialogueResponder.GenerateResponse(profile, safeInput, gameState, memory, prompt, generatedResponse =>
+        {
+            response = generatedResponse;
+        });
+
+        while (responseRoutine.MoveNext())
+        {
+            yield return responseRoutine.Current;
+        }
+
+        responseInProgress = false;
+
+        if (string.IsNullOrWhiteSpace(response))
+        {
+            response = "Es konnte keine Antwort generiert werden. Details stehen in der Unity Console.";
+        }
 
         if (!string.IsNullOrWhiteSpace(safeInput))
         {
@@ -149,8 +181,6 @@ public class DialogueManager : MonoBehaviour
         dialogueLogger.LogTurn(profile, gameState, safeInput, prompt, response, PromptVersion, safeTestCaseId, responseMode);
         onDialogueTurnCompleted.Invoke(result);
         DialogueTurnCompleted?.Invoke(result);
-
-        return result;
     }
 
     public void SetStateFlag(string flagName, bool value)
@@ -194,6 +224,7 @@ public class DialogueManager : MonoBehaviour
 
     public void SetResponseMode(ResponseMode mode)
     {
+        EnsureInitialized();
         if (responseMode == mode)
         {
             return;
@@ -349,6 +380,37 @@ public class DialogueManager : MonoBehaviour
                 memories.Add(npcId, new NpcMemory(npcId));
             }
         }
+    }
+
+    private void EnsureInitialized()
+    {
+        if (promptBuilder == null)
+        {
+            promptBuilder = new PromptBuilder();
+        }
+
+        if (dummyDialogueResponder == null)
+        {
+            dummyDialogueResponder = new DummyDialogueResponder();
+        }
+
+        if (apiDialogueResponder == null)
+        {
+            apiDialogueResponder = new ApiDialogueResponder(new ApiConfig());
+        }
+
+        if (dialogueLogger == null)
+        {
+            dialogueLogger = new DialogueLogger();
+        }
+
+        if (profiles.Count == 0)
+        {
+            CreateNpcProfiles();
+        }
+
+        EnsureMemories();
+        ApplyResponseMode();
     }
 
     private void ApplyResponseMode()

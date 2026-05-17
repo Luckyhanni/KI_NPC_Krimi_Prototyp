@@ -121,12 +121,16 @@ git status --short
 - Responder sind ueber `IDialogueResponder` abstrahiert; aktuell ist nur `DummyDialogueResponder` aktiv.
 - `ResponseMode` unterscheidet `Dummy` und `Api`; Standard bleibt `Dummy`.
 - `ApiConfig` liest den API-Key ausschliesslich aus der lokalen Environment Variable `OPENAI_API_KEY`.
-- `ApiDialogueResponder` ist als sichere Struktur vorbereitet und gibt ohne Key eine klare Fehlermeldung zurueck; echte API-Requests sind noch nicht aktiv.
+- `ApiDialogueResponder` nutzt im API-Modus die OpenAI Responses API ueber `UnityWebRequest`.
+- Endpoint: `https://api.openai.com/v1/responses`
+- Modell: `gpt-5.4-mini`
+- Request-Konfiguration: Prompt als `input`, `max_output_tokens` ca. 220, `temperature` 0.4, keine Tools.
+- Ohne `OPENAI_API_KEY` gibt der API-Modus eine klare Fehlermeldung im Chat zurueck.
 - JSONL-Logs enthalten zusaetzlich `responseMode`.
 - Memory kann fuer den aktiven NPC oder fuer alle NPCs zurueckgesetzt werden.
 - Die Runtime-UI nutzt CanvasScaler mit 1920 x 1080 Reference Resolution und ein dunkles Krimi-Farbschema.
 - Layout: Titel oben, NPC-Karten links, Chat in der Mitte, Debug/State rechts, Eingabe unten.
-- Es gibt weiterhin keine echte KI/API-Anbindung.
+- Dummy-Modus bleibt offline und ist weiterhin Standard.
 - Keine API-Keys oder Secrets in Code, Assets, Resources oder StreamingAssets speichern.
 
 ## Naechste sinnvolle Schritte
