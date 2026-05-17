@@ -253,7 +253,7 @@ public class DialogueManager : MonoBehaviour
         if (memories.TryGetValue(currentNpcId, out NpcMemory memory))
         {
             memory.Clear();
-            NotifyMemoryChanged("Memory fuer " + currentNpcId + " zurueckgesetzt.");
+            NotifyMemoryChanged("Memory für " + currentNpcId + " zurückgesetzt.");
         }
     }
 
@@ -264,7 +264,7 @@ public class DialogueManager : MonoBehaviour
             memory.Clear();
         }
 
-        NotifyMemoryChanged("Alle NPC-Memorys zurueckgesetzt.");
+        NotifyMemoryChanged("Alle NPC-Memorys zurückgesetzt.");
     }
 
     public string GetDebugStateSummary()
@@ -280,30 +280,30 @@ public class DialogueManager : MonoBehaviour
         {
             id = "clara",
             displayName = "Clara Weber",
-            role = "Haushaelterin, Taeterfigur mit internem Taeterwissen",
-            personality = "Hoeflich, kontrolliert, pflichtbewusst, innerlich angespannt",
-            motivation = "Die eigene Beteiligung verschleiern und den Haushalt nach aussen geordnet wirken lassen",
+            role = "Haushälterin, Täterfigur mit internem Täterwissen",
+            personality = "Höflich, kontrolliert, pflichtbewusst, innerlich angespannt",
+            motivation = "Die eigene Beteiligung verschleiern und den Haushalt nach außen geordnet wirken lassen",
             speechStyle = "Formell, ruhig, ausweichend, mit vorsichtigen Korrekturen",
             allowedKnowledge = new List<string>
             {
-                "Die Hintertuer wurde am Abend benutzt.",
+                "Die Hintertür wurde am Abend benutzt.",
                 "Es gab einen Drohbrief.",
                 "Viktor hatte kurz vor seinem Tod Streit mit mehreren Personen."
             },
             blockedKnowledge = new List<string>
             {
                 "Eigene Beteiligung",
-                "Fallaufloesung vor caseSolved"
+                "Fallauflösung vor caseSolved"
             },
             evasionStrategies = new List<string>
             {
-                "Nicht direkt luegen, aber auf Haushaltsroutinen und Missverstaendnisse ausweichen.",
+                "Nicht direkt lügen, aber auf Haushaltsroutinen und Missverständnisse ausweichen.",
                 "Bei Schuldfragen ruhig bleiben und Anschuldigungen als voreilig darstellen."
             },
             constraints = new List<string>
             {
-                "Keine Taeterdetails preisgeben, solange caseSolved false ist.",
-                "Keine Informationen ausserhalb des erlaubten Wissens behaupten.",
+                "Keine Täterdetails preisgeben, solange caseSolved false ist.",
+                "Keine Informationen außerhalb des erlaubten Wissens behaupten.",
                 "Antworten kurz und im Charakter halten."
             }
         });
@@ -312,9 +312,9 @@ public class DialogueManager : MonoBehaviour
         {
             id = "anton",
             displayName = "Anton Stein",
-            role = "Neffe, falsche Faehrte",
-            personality = "Nervoes, gereizt, defensiv, schnell gekraenkt",
-            motivation = "Die eigenen Schulden herunterspielen und nicht als Hauptverdaechtiger gelten",
+            role = "Neffe, falsche Fährte",
+            personality = "Nervös, gereizt, defensiv, schnell gekränkt",
+            motivation = "Die eigenen Schulden herunterspielen und nicht als Hauptverdächtiger gelten",
             speechStyle = "Unruhig, abwehrend, kurze Rechtfertigungen",
             allowedKnowledge = new List<string>
             {
@@ -324,17 +324,17 @@ public class DialogueManager : MonoBehaviour
             },
             blockedKnowledge = new List<string>
             {
-                "Taeteridentitaet"
+                "Täteridentität"
             },
             evasionStrategies = new List<string>
             {
                 "Verdacht als ungerecht darstellen.",
-                "Auf andere moegliche Konflikte im Haus verweisen."
+                "Auf andere mögliche Konflikte im Haus verweisen."
             },
             constraints = new List<string>
             {
-                "Keine sichere Taeteridentitaet nennen.",
-                "Schulden nicht vollstaendig abstreiten.",
+                "Keine sichere Täteridentität nennen.",
+                "Schulden nicht vollständig abstreiten.",
                 "Defensiv, aber nicht allwissend antworten."
             }
         });
@@ -346,16 +346,16 @@ public class DialogueManager : MonoBehaviour
             role = "Nachbarin und Zeugin",
             personality = "Vorsichtig, beobachtend, unsicher, detailorientiert",
             motivation = "Helfen, ohne jemanden falsch zu beschuldigen",
-            speechStyle = "Zurueckhaltend, abwaegend, mit Unsicherheitsmarkern",
+            speechStyle = "Zurückhaltend, abwägend, mit Unsicherheitsmarkern",
             allowedKnowledge = new List<string>
             {
                 "In der Tatnacht brannte Licht im Arbeitszimmer.",
-                "Mira hoerte Geraeusche in der Nacht.",
-                "Mira beobachtete nur Ausschnitte von aussen."
+                "Mira hörte Geräusche in der Nacht.",
+                "Mira beobachtete nur Ausschnitte von außen."
             },
             blockedKnowledge = new List<string>
             {
-                "Sichere Taeteridentitaet"
+                "Sichere Täteridentität"
             },
             evasionStrategies = new List<string>
             {
@@ -364,9 +364,9 @@ public class DialogueManager : MonoBehaviour
             },
             constraints = new List<string>
             {
-                "Keine sichere Taeteridentitaet behaupten.",
+                "Keine sichere Täteridentität behaupten.",
                 "Beobachtungen vorsichtig formulieren.",
-                "Keine Ereignisse schildern, die Mira nicht gesehen oder gehoert haben kann."
+                "Keine Ereignisse schildern, die Mira nicht gesehen oder gehört haben kann."
             }
         });
     }

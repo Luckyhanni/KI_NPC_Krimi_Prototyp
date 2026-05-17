@@ -29,7 +29,7 @@ public class NpcMemory
     {
         if (turns.Count == 0)
         {
-            return "Bisher keine Gespraechserinnerungen.";
+            return "Bisher keine Gesprächserinnerungen.";
         }
 
         int startIndex = Math.Max(0, turns.Count - 3);

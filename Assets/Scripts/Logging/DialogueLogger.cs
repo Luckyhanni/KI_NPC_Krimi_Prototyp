@@ -70,7 +70,7 @@ public class DialogueLogger
 
         try
         {
-            File.AppendAllText(legacyTextLogFilePath, builder + Environment.NewLine);
+            File.AppendAllText(legacyTextLogFilePath, builder + Environment.NewLine, Encoding.UTF8);
             DialogueLogEntry entry = new DialogueLogEntry
             {
                 timestamp = timestamp,
@@ -87,7 +87,7 @@ public class DialogueLogger
                 generatedPrompt = prompt,
                 npcResponse = npcResponse
             };
-            File.AppendAllText(jsonlLogFilePath, JsonUtility.ToJson(entry) + Environment.NewLine);
+            File.AppendAllText(jsonlLogFilePath, JsonUtility.ToJson(entry) + Environment.NewLine, Encoding.UTF8);
         }
         catch (Exception exception)
         {

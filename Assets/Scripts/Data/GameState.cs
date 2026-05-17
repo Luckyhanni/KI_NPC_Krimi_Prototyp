@@ -19,7 +19,7 @@ public class GameState
 
         if (hasFoundBrokenKey)
         {
-            activeFlags.Add("Gebrochener Schluessel gefunden");
+            activeFlags.Add("Gebrochener Schlüssel gefunden");
         }
 
         if (hasFoundBurnedLetter)
@@ -49,7 +49,7 @@ public class GameState
 
         if (caseSolved)
         {
-            activeFlags.Add("Fall ist geloest");
+            activeFlags.Add("Fall ist gelöst");
         }
 
         if (!string.IsNullOrWhiteSpace(confrontedNpcId))

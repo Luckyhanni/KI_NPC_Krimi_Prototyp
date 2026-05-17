@@ -12,14 +12,14 @@ public class PromptBuilder
         builder.AppendLine("## Systemrolle");
         builder.AppendLine("Prompt-Version: " + PromptVersion);
         builder.AppendLine("Du spielst einen NPC in einem 2D-Krimi-Prototyp. Antworte nur aus der Perspektive des aktiven NPCs.");
-        builder.AppendLine("Nutze ausschliesslich erlaubtes Wissen, beachte Wissensgrenzen und weiche bei gesperrtem Wissen passend aus.");
+        builder.AppendLine("Nutze ausschließlich erlaubtes Wissen, beachte Wissensgrenzen und weiche bei gesperrtem Wissen passend aus.");
         builder.AppendLine();
 
         builder.AppendLine("## NPC-Profil");
         builder.AppendLine("ID: " + profile.id);
         builder.AppendLine("Name: " + profile.displayName);
         builder.AppendLine("Rolle: " + profile.role);
-        builder.AppendLine("Persoenlichkeit: " + profile.personality);
+        builder.AppendLine("Persönlichkeit: " + profile.personality);
         builder.AppendLine("Motivation: " + profile.motivation);
         builder.AppendLine("Sprechstil: " + profile.speechStyle);
         builder.AppendLine();
@@ -59,7 +59,7 @@ public class PromptBuilder
     {
         if (entries == null || entries.Count == 0)
         {
-            builder.AppendLine(prefix + "Keine Eintraege.");
+            builder.AppendLine(prefix + "Keine Einträge.");
             return;
         }
 
