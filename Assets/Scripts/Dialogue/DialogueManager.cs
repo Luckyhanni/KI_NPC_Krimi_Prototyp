@@ -298,13 +298,15 @@ public class DialogueManager : MonoBehaviour
             evasionStrategies = new List<string>
             {
                 "Nicht direkt lügen, aber auf Haushaltsroutinen und Missverständnisse ausweichen.",
-                "Bei Schuldfragen ruhig bleiben und Anschuldigungen als voreilig darstellen."
+                "Bei Schuldfragen ruhig bleiben und Anschuldigungen als voreilig darstellen.",
+                "Bei themenfremden Fragen höflich auf ihre Pflichten im Haus und den Fall zurückverweisen."
             },
             constraints = new List<string>
             {
                 "Keine Täterdetails preisgeben, solange caseSolved false ist.",
                 "Keine Informationen außerhalb des erlaubten Wissens behaupten.",
-                "Antworten kurz und im Charakter halten."
+                "Antworten kurz und im Charakter halten.",
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
 
@@ -329,13 +331,15 @@ public class DialogueManager : MonoBehaviour
             evasionStrategies = new List<string>
             {
                 "Verdacht als ungerecht darstellen.",
-                "Auf andere mögliche Konflikte im Haus verweisen."
+                "Auf andere mögliche Konflikte im Haus verweisen.",
+                "Bei themenfremden Fragen gereizt reagieren und auf den Fall oder die Vorwürfe zurückkommen."
             },
             constraints = new List<string>
             {
                 "Keine sichere Täteridentität nennen.",
                 "Schulden nicht vollständig abstreiten.",
-                "Defensiv, aber nicht allwissend antworten."
+                "Defensiv, aber nicht allwissend antworten.",
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
 
@@ -360,13 +364,15 @@ public class DialogueManager : MonoBehaviour
             evasionStrategies = new List<string>
             {
                 "Unsicherheit klar benennen.",
-                "Nur Beobachtungen, keine Schlussfolgerungen als Fakten formulieren."
+                "Nur Beobachtungen, keine Schlussfolgerungen als Fakten formulieren.",
+                "Bei themenfremden Fragen unsicher sagen, dass sie dazu nichts weiß, und auf ihre Beobachtungen zur Tatnacht zurückkommen."
             },
             constraints = new List<string>
             {
                 "Keine sichere Täteridentität behaupten.",
                 "Beobachtungen vorsichtig formulieren.",
-                "Keine Ereignisse schildern, die Mira nicht gesehen oder gehört haben kann."
+                "Keine Ereignisse schildern, die Mira nicht gesehen oder gehört haben kann.",
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
     }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +14,7 @@ public class ChatUIController : MonoBehaviour
     private static readonly Color WineColor = new Color(0.360f, 0.080f, 0.115f, 1f);
     private static readonly Color ButtonColor = new Color(0.175f, 0.195f, 0.230f, 1f);
     private static readonly Color ButtonSelectedColor = new Color(0.420f, 0.110f, 0.140f, 1f);
+    private const int MaxVisibleChatMessages = 8;
 
     [SerializeField] private DialogueManager dialogueManager;
     [SerializeField] private Button claraButton;
@@ -43,8 +46,25 @@ public class ChatUIController : MonoBehaviour
     private Image miraCardImage;
     private Image dummyModeButtonImage;
     private Image apiModeButtonImage;
+    private readonly Dictionary<string, List<VisibleChatMessage>> visibleChatHistories = new Dictionary<string, List<VisibleChatMessage>>();
+    private string activeNpcId = "clara";
     private bool debugVisible = true;
     private bool syncingStateToggles;
+
+    private enum ChatMessageType
+    {
+        System,
+        Player,
+        Npc
+    }
+
+    private class VisibleChatMessage
+    {
+        public ChatMessageType type;
+        public string speaker;
+        public string text;
+        public bool isTyping;
+    }
 
     private void Awake()
     {
@@ -60,7 +80,10 @@ public class ChatUIController : MonoBehaviour
 
         EnsureUiExists();
         RegisterListeners();
-        RefreshNpcSelectionVisuals("Clara Weber");
+        activeNpcId = GetCurrentNpcId();
+        activeNpcText.text = "Aktiver NPC: " + GetNpcDisplayName(activeNpcId);
+        RenderCurrentNpcChat();
+        RefreshNpcSelectionVisuals(GetNpcDisplayName(activeNpcId));
         SyncStateTogglesFromManager();
         RefreshDebugSummary("Bereit.");
     }
@@ -117,11 +140,24 @@ public class ChatUIController : MonoBehaviour
     private void SendCurrentInput()
     {
         string input = inputField.text;
-        if (!dialogueManager.IsResponseInProgress)
+        string npcId = GetCurrentNpcId();
+        string npcName = GetNpcDisplayName(npcId);
+
+        if (dialogueManager.IsResponseInProgress || HasPendingTypingIndicator())
         {
-            chatHistoryText.text += "\n\n<color=#9FB1C2><b>System:</b></color>\nAntwort wird generiert...";
+            AddSystemMessage(npcId, GetPendingTypingNpcName() + " schreibt noch. Bitte warte kurz.");
+            RenderCurrentNpcChat();
+            return;
         }
 
+        activeNpcId = npcId;
+        if (!string.IsNullOrWhiteSpace(input))
+        {
+            AddChatMessage(npcId, ChatMessageType.Player, "Spieler", input, false);
+        }
+
+        AddTypingIndicator(npcId, npcName);
+        RenderCurrentNpcChat();
         dialogueManager.SendPlayerInput(input, GetCurrentTestCaseId());
         inputField.text = string.Empty;
         inputField.ActivateInputField();
@@ -129,19 +165,18 @@ public class ChatUIController : MonoBehaviour
 
     private void HandleNpcSelected(string displayName)
     {
+        activeNpcId = GetCurrentNpcId();
         activeNpcText.text = "Aktiver NPC: " + displayName;
         RefreshNpcSelectionVisuals(displayName);
+        RenderCurrentNpcChat();
         RefreshDebugSummary("NPC gewechselt.");
     }
 
     private void HandleDialogueTurnCompleted(DialogueTurnResult result)
     {
-        if (!string.IsNullOrWhiteSpace(result.playerInput))
-        {
-            chatHistoryText.text += "\n\n<color=#C9A24E><b>Spieler:</b></color>\n" + result.playerInput;
-        }
-
-        chatHistoryText.text += "\n\n<color=#E9E7DF><b>" + result.npcDisplayName + ":</b></color>\n" + result.npcResponse;
+        RemoveTypingIndicator(result.npcId);
+        AddChatMessage(result.npcId, ChatMessageType.Npc, result.npcDisplayName, result.npcResponse, false);
+        RenderCurrentNpcChatIfActive(result.npcId);
 
         debugText.text =
             "NPC: " + result.npcDisplayName + "\n" +
@@ -168,8 +203,232 @@ public class ChatUIController : MonoBehaviour
 
     private void HandleMemoryChanged(string message)
     {
-        chatHistoryText.text += "\n\n<color=#9FB1C2><b>System:</b></color>\n" + message;
+        if (message.StartsWith("Alle"))
+        {
+            foreach (string npcId in GetKnownNpcIds())
+            {
+                AddSystemMessage(npcId, "Alle NPC-Memorys wurden zurückgesetzt.");
+            }
+        }
+        else
+        {
+            string npcId = GetCurrentNpcId();
+            AddSystemMessage(npcId, "Memory für " + GetNpcDisplayName(npcId) + " wurde zurückgesetzt.");
+        }
+
+        RenderCurrentNpcChat();
         RefreshDebugSummary(message);
+    }
+
+    private void RefreshChatTextVisibility()
+    {
+        if (chatHistoryText == null)
+        {
+            return;
+        }
+
+        chatHistoryText.gameObject.SetActive(true);
+        chatHistoryText.enabled = true;
+        chatHistoryText.raycastTarget = false;
+        chatHistoryText.fontSize = 22;
+        chatHistoryText.alignment = TextAnchor.LowerLeft;
+        chatHistoryText.color = TextColor;
+        chatHistoryText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        chatHistoryText.verticalOverflow = VerticalWrapMode.Overflow;
+        chatHistoryText.supportRichText = true;
+
+        RectTransform textRect = chatHistoryText.rectTransform;
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(24f, 24f);
+        textRect.offsetMax = new Vector2(-24f, -24f);
+        textRect.pivot = new Vector2(0f, 0f);
+        chatHistoryText.transform.SetAsLastSibling();
+
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private void RenderCurrentNpcChat()
+    {
+        activeNpcId = string.IsNullOrWhiteSpace(activeNpcId) ? GetCurrentNpcId() : activeNpcId;
+        List<VisibleChatMessage> history = GetOrCreateChatHistory(activeNpcId);
+        int startIndex = Mathf.Max(0, history.Count - MaxVisibleChatMessages);
+        StringBuilder builder = new StringBuilder();
+
+        if (startIndex > 0)
+        {
+            AppendSystemLine(builder, "Ältere Nachrichten sind in dieser Ansicht ausgeblendet.");
+        }
+
+        for (int i = startIndex; i < history.Count; i++)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Append("\n\n");
+            }
+
+            AppendFormattedMessage(builder, history[i]);
+        }
+
+        chatHistoryText.text = builder.ToString();
+        RefreshChatTextVisibility();
+    }
+
+    private void RenderCurrentNpcChatIfActive(string npcId)
+    {
+        if (npcId == activeNpcId)
+        {
+            RenderCurrentNpcChat();
+        }
+    }
+
+    private void AddChatMessage(string npcId, ChatMessageType type, string speaker, string text, bool isTyping)
+    {
+        List<VisibleChatMessage> history = GetOrCreateChatHistory(npcId);
+        history.Add(new VisibleChatMessage
+        {
+            type = type,
+            speaker = speaker,
+            text = text,
+            isTyping = isTyping
+        });
+    }
+
+    private void AddSystemMessage(string npcId, string text)
+    {
+        AddChatMessage(npcId, ChatMessageType.System, "System", text, false);
+    }
+
+    private void AddTypingIndicator(string npcId, string npcDisplayName)
+    {
+        RemoveTypingIndicator(npcId);
+        AddChatMessage(npcId, ChatMessageType.System, "System", npcDisplayName + " schreibt gerade...", true);
+    }
+
+    private void RemoveTypingIndicator(string npcId)
+    {
+        List<VisibleChatMessage> history = GetOrCreateChatHistory(npcId);
+        history.RemoveAll(message => message.isTyping);
+    }
+
+    private bool HasPendingTypingIndicator()
+    {
+        foreach (List<VisibleChatMessage> history in visibleChatHistories.Values)
+        {
+            if (history.Exists(message => message.isTyping))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private string GetPendingTypingNpcName()
+    {
+        foreach (KeyValuePair<string, List<VisibleChatMessage>> entry in visibleChatHistories)
+        {
+            if (entry.Value.Exists(message => message.isTyping))
+            {
+                return GetNpcDisplayName(entry.Key);
+            }
+        }
+
+        return GetNpcDisplayName(GetCurrentNpcId());
+    }
+
+    private List<VisibleChatMessage> GetOrCreateChatHistory(string npcId)
+    {
+        string safeNpcId = string.IsNullOrWhiteSpace(npcId) ? "clara" : npcId;
+        if (!visibleChatHistories.TryGetValue(safeNpcId, out List<VisibleChatMessage> history))
+        {
+            history = new List<VisibleChatMessage>();
+            visibleChatHistories.Add(safeNpcId, history);
+            history.Add(new VisibleChatMessage
+            {
+                type = ChatMessageType.System,
+                speaker = "System",
+                text = "Du sprichst jetzt mit " + GetNpcDisplayName(safeNpcId) + ". Stelle eine Frage zum Fall Viktor Stein.",
+                isTyping = false
+            });
+        }
+
+        return history;
+    }
+
+    private string GetCurrentNpcId()
+    {
+        if (dialogueManager != null && !string.IsNullOrWhiteSpace(dialogueManager.CurrentNpcId))
+        {
+            return dialogueManager.CurrentNpcId;
+        }
+
+        return string.IsNullOrWhiteSpace(activeNpcId) ? "clara" : activeNpcId;
+    }
+
+    private string GetNpcDisplayName(string npcId)
+    {
+        if (dialogueManager != null && dialogueManager.profiles.TryGetValue(npcId, out NpcProfile profile))
+        {
+            return profile.displayName;
+        }
+
+        switch (npcId)
+        {
+            case "anton":
+                return "Anton Stein";
+            case "mira":
+                return "Mira Feld";
+            default:
+                return "Clara Weber";
+        }
+    }
+
+    private IEnumerable<string> GetKnownNpcIds()
+    {
+        if (dialogueManager != null && dialogueManager.profiles.Count > 0)
+        {
+            return dialogueManager.profiles.Keys;
+        }
+
+        return new[] { "clara", "anton", "mira" };
+    }
+
+    private static void AppendFormattedMessage(StringBuilder builder, VisibleChatMessage message)
+    {
+        switch (message.type)
+        {
+            case ChatMessageType.Player:
+                builder.Append("<color=#C9A24E><b>Spieler:</b></color>\n");
+                builder.Append(EscapeRichText(message.text));
+                break;
+            case ChatMessageType.Npc:
+                builder.Append("<color=#E9E7DF><b>");
+                builder.Append(EscapeRichText(message.speaker));
+                builder.Append(":</b></color>\n");
+                builder.Append(EscapeRichText(message.text));
+                break;
+            default:
+                AppendSystemLine(builder, message.text);
+                break;
+        }
+    }
+
+    private static void AppendSystemLine(StringBuilder builder, string text)
+    {
+        builder.Append("<color=#9FB1C2><i>");
+        builder.Append(EscapeRichText(text));
+        builder.Append("</i></color>");
+    }
+
+    private static string EscapeRichText(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Replace("<", "‹").Replace(">", "›");
     }
 
     private void RefreshDebugSummary(string reason)
@@ -276,10 +535,54 @@ public class ChatUIController : MonoBehaviour
         image.color = selected ? ButtonSelectedColor : ButtonColor;
     }
 
+    private bool HasCompleteUiReferences()
+    {
+        return chatHistoryText != null
+            && activeNpcText != null
+            && debugText != null
+            && inputField != null
+            && testCaseInputField != null
+            && claraButton != null
+            && antonButton != null
+            && miraButton != null
+            && sendButton != null
+            && resetCurrentMemoryButton != null
+            && resetAllMemoriesButton != null
+            && toggleDebugButton != null
+            && dummyModeButton != null
+            && apiModeButton != null
+            && hasFoundBrokenKeyToggle != null
+            && hasFoundBurnedLetterToggle != null
+            && hasFoundDebtNoteToggle != null
+            && hasAnalyzedWineToggle != null
+            && hasQuestionedClaraAlibiToggle != null
+            && hasAskedMiraAboutNightToggle != null
+            && caseSolvedToggle != null
+            && autoStateToggle != null
+            && debugPanel != null
+            && claraCardImage != null
+            && antonCardImage != null
+            && miraCardImage != null
+            && dummyModeButtonImage != null
+            && apiModeButtonImage != null;
+    }
+
+    private bool HasDirectVisibleChatText()
+    {
+        if (chatHistoryText == null || chatHistoryText.transform.parent == null)
+        {
+            return false;
+        }
+
+        return chatHistoryText.transform.parent.name == "ChatBody"
+            && chatHistoryText.GetComponentInParent<ScrollRect>() == null;
+    }
+
     private void EnsureUiExists()
     {
-        if (chatHistoryText != null && inputField != null && sendButton != null && activeNpcText != null && testCaseInputField != null && dummyModeButton != null && apiModeButton != null && hasFoundBrokenKeyToggle != null)
+        if (HasCompleteUiReferences() && HasDirectVisibleChatText())
         {
+            RefreshChatTextVisibility();
             return;
         }
 
@@ -289,6 +592,12 @@ public class ChatUIController : MonoBehaviour
             GameObject canvasObject = new GameObject("Dialogue Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        }
+
+        Transform existingRoot = canvas.transform.Find("DialogueRoot");
+        if (existingRoot != null)
+        {
+            Destroy(existingRoot.gameObject);
         }
 
         CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
@@ -358,10 +667,9 @@ public class ChatUIController : MonoBehaviour
         RectTransform chatBody = CreatePanel("ChatBody", chatPanel, new Color(0.075f, 0.088f, 0.110f, 1f));
         Stretch(chatBody, 0f, 0f, 1f, 1f, new Vector2(22f, 22f), new Vector2(-22f, -78f));
 
-        ScrollRect chatScroll = CreateScrollArea("ChatScroll", chatBody, out chatHistoryText, 22);
-        Stretch(chatScroll.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f, new Vector2(24f, 22f), new Vector2(-24f, -22f));
-        chatHistoryText.supportRichText = true;
+        chatHistoryText = CreateText("ChatHistoryText", chatBody, string.Empty, 22, FontStyle.Normal, TextAnchor.LowerLeft);
         chatHistoryText.text = "<color=#9FB1C2><b>System:</b></color>\nWähle einen NPC aus und stelle eine Frage zum Fall Viktor Stein.";
+        RefreshChatTextVisibility();
 
         debugPanel = CreatePanel("DebugPanel", root, PanelColor);
         Stretch(debugPanel, 1f, 0f, 1f, 1f, new Vector2(-430f, 118f), new Vector2(-28f, -128f));
@@ -567,7 +875,11 @@ public class ChatUIController : MonoBehaviour
         contentText.supportRichText = true;
 
         RectTransform contentRect = contentObject.GetComponent<RectTransform>();
-        Stretch(contentRect, 0f, 1f, 1f, 1f, new Vector2(0f, -1800f), Vector2.zero);
+        contentRect.anchorMin = new Vector2(0f, 1f);
+        contentRect.anchorMax = new Vector2(1f, 1f);
+        contentRect.pivot = new Vector2(0f, 1f);
+        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.sizeDelta = new Vector2(0f, 2000f);
 
         ScrollRect scrollRect = scrollObject.GetComponent<ScrollRect>();
         scrollRect.content = contentRect;

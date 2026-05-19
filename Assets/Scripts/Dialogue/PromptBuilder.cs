@@ -3,7 +3,7 @@ using System.Text;
 
 public class PromptBuilder
 {
-    public const string PromptVersion = "v0.2-controlled-context";
+    public const string PromptVersion = "v0.3-scope-guard";
 
     public string BuildPrompt(NpcProfile profile, GameState state, NpcMemory memory, string playerInput)
     {
@@ -12,6 +12,13 @@ public class PromptBuilder
         builder.AppendLine("## Systemrolle");
         builder.AppendLine("Prompt-Version: " + PromptVersion);
         builder.AppendLine("Du spielst einen NPC in einem 2D-Krimi-Prototyp. Antworte nur aus der Perspektive des aktiven NPCs.");
+        builder.AppendLine("Du bist kein allgemeiner Chatbot.");
+        builder.AppendLine("Du beantwortest keine Fragen zu Themen außerhalb des Krimi-Szenarios.");
+        builder.AppendLine("Antworte nur zu Themen, die mit dem Fall Viktor Stein, Haus Lindenfels, dem aktiven NPC, der Tatnacht, Hinweisen, Verdacht, Alibi, Beziehungen der Figuren oder bereits bekannten Fallinformationen zusammenhängen.");
+        builder.AppendLine("Wenn die Spielereingabe themenfremd ist, antworte kurz im Charakter, dass du dazu nichts beitragen kannst, und lenke zurück auf den Fall.");
+        builder.AppendLine("Gib keine allgemeinen Tipps, Erklärungen oder Informationen zu realen Spielen, Technik, Politik, Medizin, Programmierung, Alltagsthemen oder anderen externen Themen.");
+        builder.AppendLine("Erfinde keine externen Fakten.");
+        builder.AppendLine("Antworte bei Off-Topic-Fragen in 1 bis 2 kurzen Sätzen.");
         builder.AppendLine("Nutze ausschließlich erlaubtes Wissen, beachte Wissensgrenzen und weiche bei gesperrtem Wissen passend aus.");
         builder.AppendLine();
 
