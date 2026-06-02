@@ -299,14 +299,17 @@ public class DialogueManager : MonoBehaviour
             {
                 "Nicht direkt lügen, aber auf Haushaltsroutinen und Missverständnisse ausweichen.",
                 "Bei Schuldfragen ruhig bleiben und Anschuldigungen als voreilig darstellen.",
-                "Bei themenfremden Fragen höflich auf ihre Pflichten im Haus und den Fall zurückverweisen."
+                "Bei themenfremden Fragen höflich, kontrolliert, pflichtbewusst und leicht ausweichend auf ihre Pflichten im Haus und den Fall zurückverweisen.",
+                "Off-Topic-Stilreferenz: Dazu kann ich nichts beitragen. Wenn Sie Fragen zum Haus oder zu Viktor Stein haben, antworte ich, soweit ich kann.",
+                "Off-Topic-Stilreferenz: Ich verstehe nicht, was das mit dem Vorfall zu tun hat. Im Haus gibt es im Moment Wichtigeres.",
+                "Off-Topic-Stilreferenz: Darüber weiß ich nichts. Ich kümmere mich um das Haus und kann nur dazu Auskunft geben."
             },
             constraints = new List<string>
             {
                 "Keine Täterdetails preisgeben, solange caseSolved false ist.",
                 "Keine Informationen außerhalb des erlaubten Wissens behaupten.",
                 "Antworten kurz und im Charakter halten.",
-                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen abwechslungsreich, kurz und im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
 
@@ -332,14 +335,17 @@ public class DialogueManager : MonoBehaviour
             {
                 "Verdacht als ungerecht darstellen.",
                 "Auf andere mögliche Konflikte im Haus verweisen.",
-                "Bei themenfremden Fragen gereizt reagieren und auf den Fall oder die Vorwürfe zurückkommen."
+                "Bei themenfremden Fragen gereizt, defensiv und ungeduldig reagieren und auf den Fall oder die Vorwürfe zurückkommen.",
+                "Off-Topic-Stilreferenz: Keine Ahnung, warum Sie mich das fragen. Wenn es um Viktor oder die Vorwürfe gegen mich geht, reden wir darüber.",
+                "Off-Topic-Stilreferenz: Was soll das jetzt? Hier geht es um Viktor, nicht um so etwas.",
+                "Off-Topic-Stilreferenz: Ich habe andere Sorgen. Fragen Sie mich etwas, das mit dem Fall zu tun hat."
             },
             constraints = new List<string>
             {
                 "Keine sichere Täteridentität nennen.",
                 "Schulden nicht vollständig abstreiten.",
                 "Defensiv, aber nicht allwissend antworten.",
-                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen abwechslungsreich, kurz und im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
 
@@ -365,14 +371,18 @@ public class DialogueManager : MonoBehaviour
             {
                 "Unsicherheit klar benennen.",
                 "Nur Beobachtungen, keine Schlussfolgerungen als Fakten formulieren.",
-                "Bei themenfremden Fragen unsicher sagen, dass sie dazu nichts weiß, und auf ihre Beobachtungen zur Tatnacht zurückkommen."
+                "Bei themenfremden Fragen vorsichtig, unsicher, beobachtend und menschlich irritiert sagen, dass sie dazu nichts weiß, und auf ihre Beobachtungen zur Tatnacht zurückkommen.",
+                "Off-Topic-Stilreferenz: Hä? Davon verstehe ich nichts. Ich kann Ihnen nur sagen, was ich in der Nacht beobachtet habe.",
+                "Off-Topic-Stilreferenz: Ich weiß nicht, warum Sie jetzt damit kommen. Hier ist vor kurzem jemand gestorben.",
+                "Off-Topic-Stilreferenz: Damit kenne ich mich nicht aus. Wenn es um das Licht im Arbeitszimmer oder die Geräusche in der Nacht geht, sage ich Ihnen, was ich weiß.",
+                "Off-Topic-Stilreferenz: Bitte fragen Sie mich nicht nach solchen Dingen. Ich will niemanden falsch beschuldigen."
             },
             constraints = new List<string>
             {
                 "Keine sichere Täteridentität behaupten.",
                 "Beobachtungen vorsichtig formulieren.",
                 "Keine Ereignisse schildern, die Mira nicht gesehen oder gehört haben kann.",
-                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen kurz im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
+                "Keine allgemeinen Chatbot-Antworten geben; themenfremde Fragen abwechslungsreich, kurz und im Charakter ablehnen und zum Fall Viktor Stein zurückführen."
             }
         });
     }

@@ -3,7 +3,7 @@ using System.Text;
 
 public class PromptBuilder
 {
-    public const string PromptVersion = "v0.3-scope-guard";
+    public const string PromptVersion = "v0.4-varied-scope-guard";
 
     public string BuildPrompt(NpcProfile profile, GameState state, NpcMemory memory, string playerInput)
     {
@@ -16,9 +16,14 @@ public class PromptBuilder
         builder.AppendLine("Du beantwortest keine Fragen zu Themen außerhalb des Krimi-Szenarios.");
         builder.AppendLine("Antworte nur zu Themen, die mit dem Fall Viktor Stein, Haus Lindenfels, dem aktiven NPC, der Tatnacht, Hinweisen, Verdacht, Alibi, Beziehungen der Figuren oder bereits bekannten Fallinformationen zusammenhängen.");
         builder.AppendLine("Wenn die Spielereingabe themenfremd ist, antworte kurz im Charakter, dass du dazu nichts beitragen kannst, und lenke zurück auf den Fall.");
+        builder.AppendLine("Verwende bei themenfremden Fragen nicht immer dieselbe Formulierung.");
+        builder.AppendLine("Die Ablehnung muss zur Persönlichkeit und Rolle des aktiven NPCs passen.");
+        builder.AppendLine("Der NPC darf irritiert, ausweichend, höflich, gereizt oder unsicher reagieren, je nach Figur.");
+        builder.AppendLine("Behandle Beispiele für Off-Topic-Reaktionen nur als Stilreferenzen, nicht als feste Textbausteine.");
         builder.AppendLine("Gib keine allgemeinen Tipps, Erklärungen oder Informationen zu realen Spielen, Technik, Politik, Medizin, Programmierung, Alltagsthemen oder anderen externen Themen.");
         builder.AppendLine("Erfinde keine externen Fakten.");
-        builder.AppendLine("Antworte bei Off-Topic-Fragen in 1 bis 2 kurzen Sätzen.");
+        builder.AppendLine("Gib keine medizinische, technische, spielbezogene, politische, mathematische oder sonstige realweltliche Beratung.");
+        builder.AppendLine("Antworte bei Off-Topic-Fragen in 1 bis 3 kurzen Sätzen und lenke zurück auf den Fall Viktor Stein, Haus Lindenfels, die Tatnacht oder eigene Beobachtungen.");
         builder.AppendLine("Nutze ausschließlich erlaubtes Wissen, beachte Wissensgrenzen und weiche bei gesperrtem Wissen passend aus.");
         builder.AppendLine();
 
