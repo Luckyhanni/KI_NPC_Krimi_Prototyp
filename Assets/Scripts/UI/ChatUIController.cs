@@ -41,6 +41,8 @@ public class ChatUIController : MonoBehaviour
     [SerializeField] private Toggle autoStateToggle;
 
     private RectTransform debugPanel;
+    private ScrollRect chatScrollRect;
+    private RectTransform chatContentRect;
     private Image claraCardImage;
     private Image antonCardImage;
     private Image miraCardImage;
@@ -237,7 +239,38 @@ public class ChatUIController : MonoBehaviour
         chatHistoryText.verticalOverflow = VerticalWrapMode.Overflow;
         chatHistoryText.supportRichText = true;
 
+        if (chatScrollRect == null)
+        {
+            chatScrollRect = chatHistoryText.GetComponentInParent<ScrollRect>();
+        }
+
+        if (chatScrollRect == null || chatScrollRect.content == null || chatScrollRect.viewport == null)
+        {
+            RectTransform fallbackTextRect = chatHistoryText.rectTransform;
+            fallbackTextRect.anchorMin = Vector2.zero;
+            fallbackTextRect.anchorMax = Vector2.one;
+            fallbackTextRect.offsetMin = new Vector2(24f, 24f);
+            fallbackTextRect.offsetMax = new Vector2(-24f, -24f);
+            fallbackTextRect.pivot = new Vector2(0f, 0f);
+            Canvas.ForceUpdateCanvases();
+            return;
+        }
+
+        chatContentRect = chatScrollRect.content;
         RectTransform textRect = chatHistoryText.rectTransform;
+        RectTransform viewportRect = chatScrollRect.viewport;
+
+        chatScrollRect.horizontal = false;
+        chatScrollRect.vertical = true;
+        chatScrollRect.movementType = ScrollRect.MovementType.Clamped;
+        chatScrollRect.viewport = viewportRect;
+        chatScrollRect.content = chatContentRect;
+
+        chatContentRect.anchorMin = new Vector2(0f, 1f);
+        chatContentRect.anchorMax = new Vector2(1f, 1f);
+        chatContentRect.pivot = new Vector2(0f, 1f);
+        chatContentRect.anchoredPosition = Vector2.zero;
+
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
         textRect.offsetMin = new Vector2(24f, 24f);
@@ -245,6 +278,14 @@ public class ChatUIController : MonoBehaviour
         textRect.pivot = new Vector2(0f, 0f);
         chatHistoryText.transform.SetAsLastSibling();
 
+        Canvas.ForceUpdateCanvases();
+
+        float viewportHeight = Mathf.Max(0f, viewportRect.rect.height);
+        float contentHeight = Mathf.Max(viewportHeight, chatHistoryText.preferredHeight + 48f);
+        chatContentRect.sizeDelta = new Vector2(0f, contentHeight);
+
+        Canvas.ForceUpdateCanvases();
+        chatScrollRect.verticalNormalizedPosition = 0f;
         Canvas.ForceUpdateCanvases();
     }
 
@@ -560,6 +601,8 @@ public class ChatUIController : MonoBehaviour
             && caseSolvedToggle != null
             && autoStateToggle != null
             && debugPanel != null
+            && chatScrollRect != null
+            && chatContentRect != null
             && claraCardImage != null
             && antonCardImage != null
             && miraCardImage != null
@@ -567,20 +610,24 @@ public class ChatUIController : MonoBehaviour
             && apiModeButtonImage != null;
     }
 
-    private bool HasDirectVisibleChatText()
+    private bool HasScrollableChatArea()
     {
         if (chatHistoryText == null || chatHistoryText.transform.parent == null)
         {
             return false;
         }
 
-        return chatHistoryText.transform.parent.name == "ChatBody"
-            && chatHistoryText.GetComponentInParent<ScrollRect>() == null;
+        chatScrollRect = chatHistoryText.GetComponentInParent<ScrollRect>();
+        chatContentRect = chatScrollRect == null ? null : chatScrollRect.content;
+        return chatScrollRect != null
+            && chatScrollRect.viewport != null
+            && chatContentRect != null
+            && chatHistoryText.transform.parent == chatContentRect.transform;
     }
 
     private void EnsureUiExists()
     {
-        if (HasCompleteUiReferences() && HasDirectVisibleChatText())
+        if (HasCompleteUiReferences() && HasScrollableChatArea())
         {
             RefreshChatTextVisibility();
             return;
@@ -665,9 +712,11 @@ public class ChatUIController : MonoBehaviour
         Stretch(chatTitle.rectTransform, 0f, 1f, 1f, 1f, new Vector2(26f, -62f), new Vector2(-26f, -18f));
 
         RectTransform chatBody = CreatePanel("ChatBody", chatPanel, new Color(0.075f, 0.088f, 0.110f, 1f));
-        Stretch(chatBody, 0f, 0f, 1f, 1f, new Vector2(22f, 22f), new Vector2(-22f, -78f));
+        Stretch(chatBody, 0f, 0f, 1f, 1f, new Vector2(22f, 22f), new Vector2(-22f, -92f));
 
-        chatHistoryText = CreateText("ChatHistoryText", chatBody, string.Empty, 22, FontStyle.Normal, TextAnchor.LowerLeft);
+        chatScrollRect = CreateChatScrollArea("ChatScrollRect", chatBody, out chatHistoryText);
+        chatContentRect = chatScrollRect.content;
+        Stretch(chatScrollRect.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
         chatHistoryText.text = "<color=#9FB1C2><b>System:</b></color>\nWähle einen NPC aus und stelle eine Frage zum Fall Viktor Stein.";
         RefreshChatTextVisibility();
 
@@ -886,6 +935,40 @@ public class ChatUIController : MonoBehaviour
         scrollRect.horizontal = false;
         scrollRect.vertical = true;
         scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        return scrollRect;
+    }
+
+    private static ScrollRect CreateChatScrollArea(string name, Transform parent, out Text contentText)
+    {
+        GameObject scrollObject = new GameObject(name, typeof(RectTransform), typeof(ScrollRect));
+        scrollObject.transform.SetParent(parent, false);
+
+        GameObject viewportObject = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+        viewportObject.transform.SetParent(scrollObject.transform, false);
+        viewportObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+        RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
+        Stretch(viewportRect, 0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
+
+        GameObject contentObject = new GameObject("Content", typeof(RectTransform));
+        contentObject.transform.SetParent(viewportObject.transform, false);
+        RectTransform contentRect = contentObject.GetComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0f, 1f);
+        contentRect.anchorMax = new Vector2(1f, 1f);
+        contentRect.pivot = new Vector2(0f, 1f);
+        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.sizeDelta = Vector2.zero;
+
+        contentText = CreateText("ChatHistoryText", contentObject.transform, string.Empty, 22, FontStyle.Normal, TextAnchor.LowerLeft);
+        contentText.raycastTarget = false;
+        contentText.verticalOverflow = VerticalWrapMode.Overflow;
+
+        ScrollRect scrollRect = scrollObject.GetComponent<ScrollRect>();
+        scrollRect.viewport = viewportRect;
+        scrollRect.content = contentRect;
+        scrollRect.horizontal = false;
+        scrollRect.vertical = true;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        scrollRect.scrollSensitivity = 40f;
         return scrollRect;
     }
 
